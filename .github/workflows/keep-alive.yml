@@ -1,0 +1,17 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Runs daily at 12:07 UTC — avoids the top of the hour
+    - cron: "7 12 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          curl -sf "https://bqbijlcqrrfajlnvrbkf.supabase.co/rest/v1/games?select=id&limit=1" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxYmlqbGNxcnJmYWpsbnZyYmtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5Nzg1NjUsImV4cCI6MjA5ODU1NDU2NX0.37Be0TwYbKQj4U50H-9Wj0UAhbBDyTzsILaP5qu_L3Y" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxYmlqbGNxcnJmYWpsbnZyYmtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5Nzg1NjUsImV4cCI6MjA5ODU1NDU2NX0.37Be0TwYbKQj4U50H-9Wj0UAhbBDyTzsILaP5qu_L3Y"

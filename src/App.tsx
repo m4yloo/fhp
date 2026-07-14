@@ -1,65 +1,117 @@
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { Suspense, lazy } from "react";
+import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AnimatePresence } from "framer-motion";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuthContext } from "@/lib/auth-provider";
-import NotFound from "@/pages/not-found";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { PageTransition } from "@/components/page-transition";
 import { Layout } from "@/components/layout";
 
-import AuthPage from "@/pages/auth";
-import Library from "@/pages/library";
-import GameDetail from "@/pages/game";
-import Account from "@/pages/account";
-import Ledger from "@/pages/ledger";
-import Passes from "@/pages/passes";
-import FAQ from "@/pages/faq";
+// ── Lazy-loaded pages ──
+const AuthPage = lazy(() => import("@/pages/auth"));
+const Library = lazy(() => import("@/pages/library"));
+const GameDetail = lazy(() => import("@/pages/game"));
+const Account = lazy(() => import("@/pages/account"));
+const Ledger = lazy(() => import("@/pages/ledger"));
+const Passes = lazy(() => import("@/pages/passes"));
+const FAQ = lazy(() => import("@/pages/faq"));
+const Admin = lazy(() => import("@/pages/admin"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+const Landing = lazy(() => import("@/pages/landing"));
 
 const queryClient = new QueryClient();
+
+function PageSpinner() {
+  return (
+    <div className="min-h-[50dvh] flex items-center justify-center">
+      <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 /** Wraps protected routes — redirects to /prihlasenie when unauthenticated. */
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthContext();
-
-  if (loading) {
-    return (
-      <div className="min-h-[50dvh] flex items-center justify-center">
-        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Redirect to="/prihlasenie" />;
-  }
-
+  if (loading) return <PageSpinner />;
+  if (!user) return <Redirect to="/prihlasenie" />;
   return <>{children}</>;
 }
 
 function Router() {
-  return (
-    <Switch>
-      {/* Public — auth pages (DISABLED) */}
-      {/* <Route path="/prihlasenie" component={AuthPage} /> */}
-      {/* <Route path="/registracia" component={AuthPage} /> */}
+  const [location] = useLocation();
 
-      {/* Protected — wrapped in Layout (AUTH DISABLED - All routes public) */}
-      {/* <Route>
-        <ProtectedRoute> */}
-          <Layout>
-            <Switch>
-              <Route path="/" component={Library} />
-              <Route path="/kniznica" component={Library} />
-              <Route path="/hra/:id" component={GameDetail} />
-              <Route path="/ucet" component={Account} />
-              <Route path="/dennik" component={Ledger} />
-              <Route path="/pasy" component={Passes} />
-              <Route path="/pomoc" component={FAQ} />
-              <Route component={NotFound} />
-            </Switch>
-          </Layout>
-        {/* </ProtectedRoute>
-      </Route> */}
-    </Switch>
+  return (
+    <AnimatePresence mode="wait">
+      <Switch location={location} key={location}>
+        {/* ── Auth pages (exact paths, checked first) ── */}
+        <Route path="/prihlasenie">
+          <Suspense fallback={<PageSpinner />}>
+            <PageTransition>
+              <AuthPage />
+            </PageTransition>
+          </Suspense>
+        </Route>
+
+        <Route path="/registracia">
+          <Suspense fallback={<PageSpinner />}>
+            <PageTransition>
+              <AuthPage />
+            </PageTransition>
+          </Suspense>
+        </Route>
+
+        {/* ── Landing page ── */}
+        <Route path="/">
+          <Suspense fallback={<PageSpinner />}>
+            <PageTransition>
+              <Landing />
+            </PageTransition>
+          </Suspense>
+        </Route>
+
+        {/* ── Layout-wrapped pages (catch-all, last) ── */}
+        <Route>
+          <ProtectedRoute>
+            <Layout>
+              <ErrorBoundary>
+                <Suspense fallback={<PageSpinner />}>
+                  <AnimatePresence mode="wait">
+                    <Switch key={location}>
+                      <Route path="/kniznica">
+                        <PageTransition><Library /></PageTransition>
+                      </Route>
+                      <Route path="/hra/:id">
+                        <PageTransition><GameDetail /></PageTransition>
+                      </Route>
+                      <Route path="/ucet">
+                        <PageTransition><Account /></PageTransition>
+                      </Route>
+                      <Route path="/dennik">
+                        <PageTransition><Ledger /></PageTransition>
+                      </Route>
+                      <Route path="/pasy">
+                        <PageTransition><Passes /></PageTransition>
+                      </Route>
+                      <Route path="/pomoc">
+                        <PageTransition><FAQ /></PageTransition>
+                      </Route>
+                      <Route path="/admin">
+                        <PageTransition><Admin /></PageTransition>
+                      </Route>
+                      <Route>
+                        <PageTransition><NotFound /></PageTransition>
+                      </Route>
+                    </Switch>
+                  </AnimatePresence>
+                </Suspense>
+              </ErrorBoundary>
+            </Layout>
+          </ProtectedRoute>
+        </Route>
+      </Switch>
+    </AnimatePresence>
   );
 }
 

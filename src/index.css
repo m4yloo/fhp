@@ -255,6 +255,13 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  /* Prevent iOS rubber-band overscroll on the main body */
+  html {
+    overscroll-behavior: none;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -363,39 +370,7 @@
     border-radius: inherit;
   }
 
-  /* ── Gradient border card ── */
-  .card-gradient-border {
-    position: relative;
-    background: hsl(var(--card));
-    border-radius: var(--radius-lg);
-  }
-  .card-gradient-border::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(135deg, hsl(var(--primary) / 0.4), hsl(var(--border) / 0.5) 50%, hsl(var(--primary) / 0.1));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
 
-  /* ── Subtle shimmer animation ── */
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
-  .shimmer {
-    background: linear-gradient(90deg,
-      hsl(var(--primary)/0) 0%,
-      hsl(var(--primary)/0.15) 50%,
-      hsl(var(--primary)/0) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 2.5s infinite;
-  }
 
   /* ── Fade in ── */
   @keyframes fade-in {
@@ -414,4 +389,37 @@
   .pulse-dot {
     animation: pulse-dot 2s ease-in-out infinite;
   }
+
+  /* ── Mobile drawer slide-in ── */
+  @keyframes slide-in-right {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  .animate-slide-in-right {
+    animation: slide-in-right 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* ── Safe area for mobile bottom nav ── */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* ── Touch-friendly tap targets ── */
+  @media (pointer: coarse) {
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+
+  /* ── Mobile: hide desktop-only decorative blobs ── */
+  @media (max-width: 767px) {
+    .desktop-only-blob {
+      display: none;
+    }
+  }
 }
+
+/* ─── INTRO ────────────────────────────────────────────────────────────────── */
+/* All intro animation is now handled by Framer Motion in intro.tsx */
+

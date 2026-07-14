@@ -1,75 +1,69 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Zap, CreditCard, Infinity, Clock, Sparkles, ArrowRight } from "lucide-react";
+import { useCancelPassRequest, usePassRequests, useRequestPass } from "@/hooks/usePassRequests";
+import { PassesSkeleton } from "@/components/skeletons";
+import { ArrowRight, Check, Clock, CreditCard, Infinity, Sparkles, Zap } from "lucide-react";
 
 const PLANS = [
   {
-    id: "limited",
+    id: "limited" as const,
     name: "Limitovaný",
-    price: "10",
+    price: "9.99",
     period: null,
-    description: "Jednorazová platba, 12 hier bez časového limitu.",
+    description: "Jednorazová žiadosť o pas pre 12 hier.",
     icon: CreditCard,
     accent: "border-border/70 hover:border-primary/40",
     badge: null,
     cta: "Požiadať o limitovaný pas",
     testid: "button-select-metered",
-    features: [
-      { text: "12 hier celkovo", highlight: true },
-      { text: "Bez časového limitu" },
-      { text: "Hry možno kedykoľvek uplatniť" },
-      { text: "Štandardný katalóg" },
-      { text: "Podpora do 24h" },
-    ],
+    features: ["12 hier celkovo", "Bez časového limitu", "Štandardný katalóg", "Podpora do 24h"],
   },
   {
-    id: "unlimited",
+    id: "unlimited" as const,
     name: "Neobmedzený",
-    price: "15",
+    price: "14.99",
     period: "/ 4 mesiace",
-    description: "100 hier v priebehu 4 mesiacov, prioritná podpora.",
+    description: "Žiadosť o pas pre 100 hier počas 4 mesiacov.",
     icon: Infinity,
     accent: "border-primary/40 shadow-lg shadow-primary/10",
     badge: "Odporúčané",
     cta: "Požiadať o neobmedzený pas",
     testid: "button-select-unlimited",
-    features: [
-      { text: "100 hier celkovo", highlight: true },
-      { text: "Platnosť 4 mesiace" },
-      { text: "Prioritná podpora do 1h" },
-    ],
+    features: ["100 hier celkovo", "Platnosť 4 mesiace", "Prioritná podpora"],
   },
 ];
 
 export default function Passes() {
-  const [cakajuci, setCakajuci] = useState<string | null>(null);
+  const { data: requests = [], isLoading } = usePassRequests();
+  const requestPass = useRequestPass();
+  const cancelRequest = useCancelPassRequest();
+  const pendingRequest = requests.find((request) => request.status === "pending");
+  const pendingPlan = PLANS.find((plan) => plan.id === pendingRequest?.pass_type);
 
-  if (cakajuci) {
+  if (pendingRequest) {
     return (
       <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
-        <div className="card-gradient-border p-10 max-w-md w-full flex flex-col items-center gap-6">
+        <div className="border border-border/60 bg-card p-10 max-w-md w-full flex flex-col items-center gap-6 rounded-[var(--radius-lg)]">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/25 flex items-center justify-center">
             <Clock className="w-8 h-8 text-primary animate-pulse" />
           </div>
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-foreground">Žiadosť odoslaná</h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Tvoja žiadosť o{" "}
-              <span className="font-semibold text-foreground">{cakajuci}</span>{" "}
-              pas je v poradí. Aktivujeme ho do 24 hodín.
+              Tvoja žiadosť o <span className="font-semibold text-foreground">{pendingPlan?.name ?? pendingRequest.pass_type}</span> pas je uložená v Supabase.
             </p>
           </div>
           <div className="flex items-center gap-2 text-[11px] text-emerald-400 font-mono bg-emerald-500/8 border border-emerald-500/20 px-4 py-2 rounded-full">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-dot" />
-            Operátori online · ~10 min
+            Status: {pendingRequest.status}
           </div>
           <Button
             variant="outline"
-            onClick={() => setCakajuci(null)}
+            onClick={() => cancelRequest.mutate(pendingRequest.id)}
+            disabled={cancelRequest.isPending}
             data-testid="button-cancel-request"
             className="mt-2 border-border text-muted-foreground hover:text-foreground text-sm w-full"
           >
-            Zrušiť žiadosť
+            {cancelRequest.isPending ? "Ruším..." : "Zrušiť žiadosť"}
           </Button>
         </div>
       </div>
@@ -78,26 +72,26 @@ export default function Passes() {
 
   return (
     <div className="space-y-10">
-      {/* Header */}
-      <div className="border-b border-border/50 pb-8">
-        <div className="flex items-center gap-2 text-[11px] font-mono text-primary uppercase tracking-widest mb-3">
-          <Sparkles className="w-3.5 h-3.5" />
-          Členstvo
-        </div>
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Členské pasy</h1>
-        <p className="text-muted-foreground text-sm max-w-lg">
-          Zvol si plán a získaj prístup k súkromnej knižnici overených herných licencií.
-        </p>
-      </div>
+      {isLoading && !requests.length ? <PassesSkeleton /> : (
+        <>
+          <div className="border-b border-border/50 pb-8">
+            <div className="flex items-center gap-2 text-[11px] font-mono text-primary uppercase tracking-widest mb-3">
+              <Sparkles className="w-3.5 h-3.5" />
+              Členstvo
+            </div>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Členské pasy</h1>
+            <p className="text-muted-foreground text-sm max-w-lg">
+              Vyber plán. Kliknutie vytvorí reálny záznam v tabuľke pass_requests.
+            </p>
+          </div>
 
-      {/* Plans */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-3xl">
         {PLANS.map((plan) => {
           const Icon = plan.icon;
           return (
             <div
               key={plan.id}
-              className={`relative bg-card border rounded-2xl p-8 flex flex-col gap-6 transition-all duration-200 ${plan.accent}`}
+              className={`relative bg-card border rounded-2xl p-6 sm:p-8 flex flex-col gap-6 transition-all duration-200 ${plan.accent}`}
             >
               {plan.badge && (
                 <div className="absolute -top-3 left-6 bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-md shadow-primary/30">
@@ -105,20 +99,17 @@ export default function Passes() {
                 </div>
               )}
 
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-                      <Icon className="w-4 h-4 text-primary" />
-                    </div>
-                  </div>
-                  <h2 className="text-xl font-bold text-foreground mt-2">{plan.name}</h2>
-                  <p className="text-sm text-muted-foreground mt-0.5">{plan.description}</p>
+              <div>
+                <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <Icon className="w-4 h-4 text-primary" />
                 </div>
+                <h2 className="text-xl font-bold text-foreground mt-3">{plan.name}</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">{plan.description}</p>
               </div>
 
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-4xl font-extrabold font-mono text-foreground">{plan.price} €</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-black tracking-tight text-foreground">{plan.price}</span>
+                <span className="text-lg font-bold text-muted-foreground">EUR</span>
                 {plan.period && (
                   <span className="text-muted-foreground text-sm font-mono">{plan.period}</span>
                 )}
@@ -127,18 +118,17 @@ export default function Passes() {
               <ul className="flex flex-col gap-2.5">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-center gap-3 text-sm">
-                    <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${feature.highlight ? "bg-primary/15 border border-primary/30" : "bg-card border border-border"}`}>
-                      <Check className={`w-2.5 h-2.5 ${feature.highlight ? "text-primary" : "text-muted-foreground"}`} />
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-primary/15 border border-primary/30">
+                      <Check className="w-2.5 h-2.5 text-primary" />
                     </div>
-                    <span className={feature.highlight ? "text-foreground font-medium" : "text-muted-foreground"}>
-                      {feature.text}
-                    </span>
+                    <span className="text-foreground font-medium">{feature}</span>
                   </li>
                 ))}
               </ul>
 
               <Button
-                onClick={() => setCakajuci(plan.name)}
+                onClick={() => requestPass.mutate(plan.id)}
+                disabled={requestPass.isPending || isLoading}
                 data-testid={plan.testid}
                 className={`w-full h-11 font-semibold text-sm rounded-xl flex items-center justify-center gap-2 mt-auto transition-all ${
                   plan.badge
@@ -146,7 +136,7 @@ export default function Passes() {
                     : "bg-card hover:bg-primary/10 border border-border hover:border-primary/50 text-foreground"
                 }`}
               >
-                {plan.cta}
+                {requestPass.isPending ? "Odosielam..." : plan.cta}
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
@@ -154,21 +144,25 @@ export default function Passes() {
         })}
       </div>
 
-      {/* Bottom trust signals */}
+      {requestPass.error && (
+        <div className="max-w-3xl bg-red-500/5 border border-red-500/25 rounded-xl p-4 text-sm text-red-400">
+          {(requestPass.error as Error).message}
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground font-mono border-t border-border/40 pt-8">
         <span className="flex items-center gap-1.5">
           <Zap className="w-3.5 h-3.5 text-primary" />
-          Aktivácia do 24h
+          Žiadosti sú uložené v Supabase
         </span>
         <span className="flex items-center gap-1.5">
           <Check className="w-3.5 h-3.5 text-emerald-400" />
-          Bezpečná platba
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Check className="w-3.5 h-3.5 text-emerald-400" />
-          Hry zostávajú natrvalo
+          Schválenie môže riešiť admin flow
         </span>
       </div>
+      </>
+      )}
     </div>
   );
 }
+

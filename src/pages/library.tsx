@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useGames } from "@/hooks/useGames";
+import { LibrarySkeleton } from "@/components/skeletons";
 import {
   Search,
   X,
@@ -18,6 +19,7 @@ import {
   ArrowDownUp,
   TrendingUp,
   Calendar,
+  Filter,
 } from "lucide-react";
 
 // Friendly Slovak labels for the raw IGDB genre strings.
@@ -50,6 +52,16 @@ const safeRating = (v: any): string => {
   return isNaN(num) ? "—" : `${num}%`;
 };
 
+// Get color class based on rating percentage
+const getRatingColor = (rating: string): string => {
+  const num = parseInt(rating, 10);
+  if (isNaN(num)) return "text-gray-400";
+  if (num >= 85) return "text-emerald-400";
+  if (num >= 70) return "text-yellow-400";
+  if (num >= 50) return "text-orange-400";
+  return "text-red-400";
+};
+
 // A game has a "real" rating if it's not the default 90% placeholder.
 const isRealRating = (rating: string) => rating !== "90%";
 
@@ -75,10 +87,10 @@ function CarouselCard({ game, onClick }: { game: any; onClick: () => void }) {
         loading="lazy"
         className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
       <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded">
-        <Star className="w-2.5 h-2.5 text-yellow-400 fill-current" />
-        <span className="text-[9px] font-mono text-yellow-300">{safeRating(game.rating)}</span>
+        <Star className={`w-2.5 h-2.5 ${getRatingColor(game.rating)} fill-current`} />
+        <span className={`text-[9px] font-mono ${getRatingColor(game.rating)}`}>{safeRating(game.rating)}</span>
       </div>
       <div className="absolute bottom-0 left-0 right-0 p-2.5">
         <p className="text-xs font-bold text-white truncate drop-shadow">{safeStr(game.title)}</p>
@@ -255,19 +267,42 @@ export default function Library() {
   useEffect(() => setVisibleCount(VISIBLE_STEP), [selectedGenre, selectedDecade, sortBy]);
   const visible = sorted.slice(0, visibleCount);
 
-  // Featured banner: a random game from the current filter, picked once per
-  // genre selection. It is intentionally excluded from being the first grid
-  // card so the spotlight is always something different from card #1.
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < sorted.length) {
+          setVisibleCount((c) => Math.min(c + VISIBLE_STEP, sorted.length));
+        }
+      },
+      { rootMargin: "250px" }
+    );
+
+    observer.observe(sentinel);
+    return () => {
+      observer.unobserve(sentinel);
+    };
+  }, [visibleCount, sorted.length]);
+
+  // Featured banner: highest-rated game from the current filter.
   const [featured, setFeatured] = useState<any>(null);
   useEffect(() => {
-    const pool = filtered.length > 1 ? filtered.slice(1) : filtered;
-    if (pool.length === 0) {
+    if (filtered.length === 0) {
       setFeatured(null);
       return;
     }
-    setFeatured(pool[Math.floor(Math.random() * pool.length)]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedGenre, filtered]);
+    const rated = [...filtered].sort((a: any, b: any) => {
+      const ra = parseInt(safeStr(a.rating), 10) || 0;
+      const rb = parseInt(safeStr(b.rating), 10) || 0;
+      return rb - ra;
+    });
+    setFeatured(rated[0]);
+  }, [selectedGenre, selectedDecade, broadSearchTerm, games.length]);
+
 
   // Search dropdown matches: uses games array + debounced input
   const searchMatches = useMemo(() => {
@@ -317,6 +352,10 @@ export default function Library() {
       .slice(0, 20);
   }, [games]);
 
+  if (isLoading && !games.length) {
+    return <LibrarySkeleton />;
+  }
+
   return (
     <div className="flex flex-col gap-10">
 
@@ -327,28 +366,31 @@ export default function Library() {
       {featured && (
         <div
           onClick={() => setLocation(`/hra/${featured.id}`)}
-          className="relative w-full aspect-[21/9] rounded-2xl overflow-hidden cursor-pointer group"
+          className="relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-2xl overflow-hidden cursor-pointer group"
         >
           <img
             src={featured.image}
             alt={featured.title}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.03]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+          {/* Gradient scrim: strongest at bottom-left, fading toward top-right */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-black/90 via-black/50 to-transparent" />
+          {/* Additional bottom fade for extra contrast */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
+          <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8">
+            <div className="flex flex-wrap items-center gap-1.5 mb-3">
               {safeTags(featured.tags).slice(0, 3).map((tag: string) => (
-                <span key={tag} className="text-[10px] font-mono uppercase tracking-wider text-white/60 bg-white/10 backdrop-blur-sm px-2 py-0.5 rounded">
+                <span key={tag} className="text-[10px] font-mono uppercase tracking-wider text-white/70 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded border border-white/10">
                   {tag}
                 </span>
               ))}
             </div>
-            <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-2">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-1.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
               {safeStr(featured.title)}
             </h2>
-            <p className="text-sm text-white/50 max-w-lg mb-4 hidden sm:block">{safeStr(featured.description)}</p>
-            <div className="flex items-center gap-3 text-xs text-white/40 font-mono">
+            <p className="text-xs text-white/80 max-w-lg mb-3 hidden sm:block drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">{safeStr(featured.description)}</p>
+            <div className="flex items-center gap-3 text-[11px] text-white/90 font-mono drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
               <div className="flex items-center gap-1">
                 <Star className="w-3 h-3 text-yellow-400 fill-current" />
                 <span className="text-yellow-300">{safeRating(featured.rating)}</span>
@@ -364,121 +406,128 @@ export default function Library() {
 
       {/* ── Filters bar ── */}
       <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-3">
-          <h2 className="text-base font-bold text-foreground shrink-0">Katalóg</h2>
-          <div className="h-px flex-1 bg-border/40" />
+        {/* Row 1: Title + count + filter controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
+            <h2 className="text-base font-bold text-foreground">Katalóg</h2>
+            <span className="text-[11px] text-muted-foreground font-mono">{filtered.length} hier</span>
+          </div>
+          <div className="h-px flex-1 bg-border/40 hidden sm:block" />
 
-          {/* Sort dropdown */}
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-            <SelectTrigger className="w-[140px] h-8 text-xs font-mono bg-card border-border/60 rounded-lg">
-              <ArrowDownUp className="w-3 h-3 mr-1.5 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="rating">Hodnotenie</SelectItem>
-              <SelectItem value="newest">Najnovšie</SelectItem>
-              <SelectItem value="year">Rok vzostupne</SelectItem>
-              <SelectItem value="name">Názov A–Z</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            {/* Sort dropdown */}
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+              <SelectTrigger className="w-[120px] h-8 text-xs font-mono bg-card/80 border-border/50 rounded-lg">
+                <ArrowDownUp className="w-3 h-3 mr-1.5 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rating">Hodnotenie</SelectItem>
+                <SelectItem value="newest">Najnovšie</SelectItem>
+                <SelectItem value="year">Rok vzostupne</SelectItem>
+                <SelectItem value="name">Názov A–Z</SelectItem>
+              </SelectContent>
+            </Select>
 
-          {/* Decade filter */}
-          <Select value={selectedDecade} onValueChange={setSelectedDecade}>
-            <SelectTrigger className="w-[100px] h-8 text-xs font-mono bg-card border-border/60 rounded-lg">
-              <Calendar className="w-3 h-3 mr-1.5 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Všetky">Všetky</SelectItem>
-              {ALL_DECADES.map((d) => (
-                <SelectItem key={d} value={String(d)}>
-                  {DECADE_LABELS[d] || `${d}s`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Search box with dropdown */}
-          <div className="relative w-56" ref={searchBoxRef}>
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none z-10" />
-            <Input
-              placeholder="Hľadať…"
-              value={search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              onFocus={() => setSearchOpen(true)}
-              data-testid="input-search"
-              className="pl-9 pr-8 bg-card border-border/60 h-8 text-xs font-mono rounded-lg"
-            />
-            {search && (
-              <button
-                onClick={() => {
-                  setSearch("");
-                  setBroadSearchTerm("");
-                  setSearchOpen(false);
-                }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
-
-            {/* Dropdown results */}
-            {searchOpen && search.trim() && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl overflow-hidden z-50 max-h-72 overflow-y-auto">
-                {searchMatches.length === 0 ? (
-                  <div className="px-3 py-4 text-center">
-                    <Search className="w-4 h-4 text-muted-foreground/40 mx-auto mb-1.5" />
-                    <p className="text-[11px] font-mono text-muted-foreground">Žiadne výsledky.</p>
-                    <p className="text-[10px] font-mono text-muted-foreground/60 mt-0.5">Skúste iný výraz.</p>
-                  </div>
-                ) : (
-                  searchMatches.map((g) => (
-                    <button
-                      key={g.id}
-                      onClick={() => pickGame(g.id)}
-                      data-testid={`search-result-${g.id}`}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-accent transition-colors"
-                    >
-                      <img
-                        src={g.image}
-                        alt=""
-                        className="w-8 h-8 rounded object-cover shrink-0"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs font-semibold text-foreground truncate">{safeStr(g.title)}</div>
-                        <div className="text-[10px] font-mono text-muted-foreground truncate">
-                          {GENRE_LABELS[safeStr(g.genre)] || g.genre} · {safeNum(g.year)}
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-mono text-yellow-300 shrink-0">
-                        {safeRating(g.rating)}
-                      </span>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
+            {/* Decade filter */}
+            <Select value={selectedDecade} onValueChange={setSelectedDecade}>
+              <SelectTrigger className="w-[100px] h-8 text-xs font-mono bg-card/80 border-border/50 rounded-lg">
+                <Filter className="w-3 h-3 mr-1.5 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Všetky">Všetky</SelectItem>
+                {ALL_DECADES.map((d) => (
+                  <SelectItem key={d} value={String(d)}>
+                    {DECADE_LABELS[d] || `${d}s`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {genres.map((g) => (
+        {/* Row 2: Search (full width on mobile) */}
+        <div className="relative w-full" ref={searchBoxRef}>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none z-10" />
+          <Input
+            placeholder="Hľadať…"
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+            onFocus={() => setSearchOpen(true)}
+            data-testid="input-search"
+            className="pl-9 pr-8 bg-card border-border/60 h-8 text-xs font-mono rounded-lg w-full sm:w-64"
+          />
+          {search && (
             <button
-              key={g}
-              onClick={() => setSelectedGenre(g)}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                selectedGenre === g
-                  ? "bg-primary text-white"
-                  : "bg-card border border-border/50 text-muted-foreground hover:text-foreground"
-              }`}
+              onClick={() => {
+                setSearch("");
+                setBroadSearchTerm("");
+                setSearchOpen(false);
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10"
             >
-              {g}
+              <X className="w-3 h-3" />
             </button>
-          ))}
-          <span className="ml-auto text-[11px] text-muted-foreground font-mono">
-            {filtered.length} hier
-          </span>
+          )}
+
+          {/* Dropdown results */}
+          {searchOpen && search.trim() && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl overflow-hidden z-50 max-h-72 overflow-y-auto">
+              {searchMatches.length === 0 ? (
+                <div className="px-3 py-4 text-center">
+                  <Search className="w-4 h-4 text-muted-foreground/40 mx-auto mb-1.5" />
+                  <p className="text-[11px] font-mono text-muted-foreground">Žiadne výsledky.</p>
+                  <p className="text-[10px] font-mono text-muted-foreground/60 mt-0.5">Skúste iný výraz.</p>
+                </div>
+              ) : (
+                searchMatches.map((g) => (
+                  <button
+                    key={g.id}
+                    onClick={() => pickGame(g.id)}
+                    data-testid={`search-result-${g.id}`}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-accent transition-colors"
+                  >
+                    <img
+                      src={g.image}
+                      alt=""
+                      className="w-8 h-8 rounded object-cover shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-semibold text-foreground truncate">{safeStr(g.title)}</div>
+                      <div className="text-[10px] font-mono text-muted-foreground truncate">
+                        {GENRE_LABELS[safeStr(g.genre)] || g.genre} · {safeNum(g.year)}
+                      </div>
+                    </div>
+                    <span className={`text-[10px] font-mono ${getRatingColor(g.rating)} shrink-0`}>
+                      {safeRating(g.rating)}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Genre pills - horizontally scrollable with fade */}
+        <div className="relative">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 -mb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {genres.map((g) => (
+              <button
+                key={g}
+                onClick={() => setSelectedGenre(g)}
+                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all shrink-0 ${
+                  selectedGenre === g
+                    ? "bg-primary text-white"
+                    : "bg-card border border-border/50 text-foreground/70 hover:text-foreground hover:border-border"
+                }`}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+          <div className="absolute top-0 right-0 bottom-2 w-16 bg-background pointer-events-none" />
         </div>
       </div>
 
@@ -509,14 +558,15 @@ export default function Library() {
                   game.available ? "" : "grayscale opacity-30"
                 }`}
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
               {!game.available && (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/50">
                   <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-muted-foreground bg-card/90 border border-border/50 px-2.5 py-1 rounded">Nedostupné</span>
                 </div>
               )}
               <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded">
-                <Star className="w-2.5 h-2.5 text-yellow-400 fill-current" />
-                <span className="text-[9px] font-mono text-yellow-300">{safeRating(game.rating)}</span>
+                <Star className={`w-2.5 h-2.5 ${getRatingColor(game.rating)} fill-current`} />
+                <span className={`text-[9px] font-mono ${getRatingColor(game.rating)}`}>{safeRating(game.rating)}</span>
               </div>
             </div>
             <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">{safeStr(game.title)}</p>
@@ -525,21 +575,23 @@ export default function Library() {
         ))}
       </div>
 
-      {/* ── Load more ── */}
-      {visibleCount < sorted.length && (
-        <div className="flex flex-col items-center gap-1.5 pt-2">
-          <button
-            onClick={() => setVisibleCount((c) => c + VISIBLE_STEP)}
-            data-testid="button-load-more"
-            className="px-5 py-2.5 rounded-lg bg-card border border-border/60 hover:border-primary/60 text-muted-foreground hover:text-primary transition-all text-xs font-mono uppercase tracking-widest"
-          >
-            Načítať ďalšie ({sorted.length - visibleCount} zostáva)
-          </button>
-          <span className="text-[11px] text-muted-foreground font-mono">
-            {visibleCount} z {sorted.length}
-          </span>
-        </div>
-      )}
+      {/* ── Infinite Scroll Sentinel ── */}
+      <div ref={sentinelRef} className="flex flex-col items-center gap-1.5 pt-4 pb-8 min-h-12 w-full justify-center">
+        {visibleCount < sorted.length ? (
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-[10px] text-muted-foreground font-mono">
+              Načítavam ďalšie... ({sorted.length - visibleCount} zostáva)
+            </span>
+          </div>
+        ) : (
+          sorted.length > 0 && (
+            <span className="text-[11px] text-muted-foreground font-mono">
+              Zobrazených všetkých {sorted.length} hier
+            </span>
+          )
+        )}
+      </div>
     </div>
   );
 }

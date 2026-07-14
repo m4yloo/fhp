@@ -13,10 +13,10 @@ export interface Profile {
   id: string;
   username: string;
   created_at: string;
+  admin_role?: boolean;
   is_dev?: boolean;
   badge?: string;
   unlimited_access?: boolean;
-  admin_role?: boolean;
 }
 
 interface AuthState {
@@ -28,11 +28,85 @@ interface AuthState {
 
 export function useAuth() {
   const devBypassRef = useRef(isDevBypassActive());
-  const [state, setState] = useState<AuthState>(() =>
+  const [state, setState] = useState<AuthState>(
     devBypassRef.current
       ? { user: DEV_USER, session: null, profile: DEV_PROFILE, loading: false }
-      : { user: null, session: null, profile: null, loading: true }
+      : { user: null, session: null, profile: null, loading: true },
   );
+
+  const loadProfile = useCallback(async (user: User): Promise<Profile> => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    return {
+      id: user.id,
+      username:
+        data?.username ??
+        user.user_metadata?.username ??
+        user.email?.split("@")[0] ??
+        "member",
+      created_at: data?.created_at ?? user.created_at,
+      admin_role: data?.admin_role ?? false,
+    };
+  }, []);
+
+  useEffect(() => {
+    if (devBypassRef.current) return;
+
+    let mounted = true;
+
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!mounted) return;
+      const session = data.session;
+      if (!session?.user) {
+        setState({ user: null, session: null, profile: null, loading: false });
+        return;
+      }
+
+      try {
+        const profile = await loadProfile(session.user);
+        if (mounted) {
+          setState({ user: session.user, session, profile, loading: false });
+        }
+      } catch {
+        if (mounted) {
+          setState({ user: session.user, session, profile: null, loading: false });
+        }
+      }
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted || devBypassRef.current) return;
+
+        if (!session?.user) {
+          setState({ user: null, session: null, profile: null, loading: false });
+          return;
+        }
+
+        try {
+          const profile = await loadProfile(session.user);
+          if (mounted) {
+            setState({ user: session.user, session, profile, loading: false });
+          }
+        } catch {
+          if (mounted) {
+            setState({ user: session.user, session, profile: null, loading: false });
+          }
+        }
+      },
+    );
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [loadProfile]);
 
   const applyDevBypass = useCallback(() => {
     if (!import.meta.env.DEV) return;
@@ -52,70 +126,28 @@ export function useAuth() {
     setState({ user: null, session: null, profile: null, loading: false });
   }, []);
 
-  // On mount and on every auth change, sync session + profile.
-  useEffect(() => {
-    if (devBypassRef.current) return;
-
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }) => {
-        if (devBypassRef.current) return;
-        setState((s) => ({ ...s, session, user: session?.user ?? null, loading: false }));
-      })
-      .catch(() => {
-        if (devBypassRef.current) return;
-        setState((s) => ({ ...s, session: null, user: null, loading: false }));
-      });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (devBypassRef.current) return;
-      setState((s) => ({ ...s, session, user: session?.user ?? null }));
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Fetch profile whenever user changes.
-  useEffect(() => {
-    if (!state.user) {
-      setState((s) => ({ ...s, profile: null }));
-      return;
-    }
-    if (devBypassRef.current) {
-      setState((s) => ({ ...s, profile: DEV_PROFILE }));
-      return;
-    }
-    supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", state.user.id)
-      .single()
-      .then(({ data }) => {
-        setState((s) => ({ ...s, profile: data ?? null }));
-      });
-  }, [state.user]);
-
   const signUp = useCallback(async (email: string, password: string, username: string) => {
+    setState((current) => ({ ...current, loading: true }));
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { username } },
+      options: {
+        data: { username },
+      },
     });
+    setState((current) => ({ ...current, loading: false }));
     if (error) throw error;
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    setState((current) => ({ ...current, loading: true }));
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setState((current) => ({ ...current, loading: false }));
     if (error) throw error;
   }, []);
 
   const signInWithOAuth = useCallback(async (provider: "discord" | "google") => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: window.location.origin + "/kniznica" },
-    });
+    const { error } = await supabase.auth.signInWithOAuth({ provider });
     if (error) throw error;
   }, []);
 
@@ -124,14 +156,15 @@ export function useAuth() {
       clearDevBypass();
       return;
     }
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    await supabase.auth.signOut();
+    setState({ user: null, session: null, profile: null, loading: false });
   }, [clearDevBypass]);
 
   return {
     ...state,
     signUp,
     signIn,
+    signInWithOAuth,
     signOut,
     devBypassSignIn: applyDevBypass,
   };
