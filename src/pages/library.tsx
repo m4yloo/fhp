@@ -17,8 +17,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowDownUp,
-  TrendingUp,
-  Calendar,
   Filter,
 } from "lucide-react";
 
@@ -61,9 +59,6 @@ const getRatingColor = (rating: string): string => {
   if (num >= 50) return "text-orange-400";
   return "text-red-400";
 };
-
-// A game has a "real" rating if it's not the default 90% placeholder.
-const isRealRating = (rating: string) => rating !== "90%";
 
 const DECADE_LABELS: Record<number, string> = {
   1980: "80s",

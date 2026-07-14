@@ -13,10 +13,6 @@ import {
   XCircle,
   BarChart3,
   RefreshCw,
-  Eye,
-  Mail,
-  Calendar,
-  ArrowUpRight,
 } from "lucide-react";
 
 interface PassRequest {

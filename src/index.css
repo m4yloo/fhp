@@ -348,17 +348,6 @@
   ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 99px; }
   ::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.6); }
 
-  /* ── Glow utilities ── */
-  .glow-primary {
-    box-shadow: 0 0 24px hsl(var(--primary) / 0.25), 0 0 60px hsl(var(--primary) / 0.08);
-  }
-  .glow-primary-sm {
-    box-shadow: 0 0 12px hsl(var(--primary) / 0.2);
-  }
-  .text-glow {
-    text-shadow: 0 0 20px hsl(var(--primary) / 0.5);
-  }
-
   /* ── Noise texture overlay ── */
   .noise::before {
     content: '';

@@ -9,8 +9,6 @@ dist/
 .env.local
 .env.*.local
 
-# the seeded games data file is large and regenerated via scripts/fetch-games.js
-
 # editor / OS
 .vscode/
 .idea/
@@ -18,10 +16,5 @@ dist/
 Thumbs.db
 *.log
 
-ummm/
-
-# local secrets — Twitch/IGDB API credentials for the search script
-awdba/
-secrets/
-*.secret
-*.secret.txt
+# local tools
+.mimocode/
