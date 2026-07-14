@@ -78,6 +78,10 @@ export function useAuth() {
           setState({ user: session.user, session, profile: null, loading: false });
         }
       }
+    }).catch(() => {
+      if (mounted) {
+        setState({ user: null, session: null, profile: null, loading: false });
+      }
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(
