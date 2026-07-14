@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuthContext } from "@/lib/auth-provider";
-import { getMockPasses, isSupabaseHealthy, markSupabaseFailed } from "@/lib/mock-db";
 
 export interface Pass {
   id: string;
@@ -20,30 +19,19 @@ export function usePass() {
   return useQuery({
     queryKey: ["activePass", user?.id],
     queryFn: async () => {
-      if (!isSupabaseHealthy()) {
-        const passes = getMockPasses(user!.id);
-        return (passes.find(p => p.status === 'active') || null) as Pass | null;
-      }
-      try {
-        const { data, error } = await supabase
-          .from("user_passes")
-          .select("*")
-          .eq("user_id", user!.id)
-          .eq("status", "active")
-          .gt("expires_at", new Date().toISOString())
-          .order("expires_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+      const { data, error } = await supabase
+        .from("passes")
+        .select("*")
+        .eq("user_id", user!.id)
+        .eq("status", "active")
+        .gt("expires_at", new Date().toISOString())
+        .order("expires_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-        if (error) throw error;
-        return data as Pass | null;
-      } catch (err) {
-        markSupabaseFailed();
-        const passes = getMockPasses(user!.id);
-        return (passes.find(p => p.status === 'active') || null) as Pass | null;
-      }
+      if (error) throw error;
+      return data as Pass | null;
     },
     enabled: !!user,
   });
 }
-

@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuthContext } from "@/lib/auth-provider";
-import { getMockTransactions, isSupabaseHealthy, markSupabaseFailed } from "@/lib/mock-db";
 
 export interface Transaction {
   id: string;
@@ -21,24 +20,15 @@ export function useTransactions() {
   return useQuery({
     queryKey: ["transactions", user?.id],
     queryFn: async () => {
-      if (!isSupabaseHealthy()) {
-        return getMockTransactions(user!.id);
-      }
-      try {
-        const { data, error } = await supabase
-          .from("transactions")
-          .select("*")
-          .eq("user_id", user!.id)
-          .order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false });
 
-        if (error) throw error;
-        return (data ?? []) as Transaction[];
-      } catch (err) {
-        markSupabaseFailed();
-        return getMockTransactions(user!.id);
-      }
+      if (error) throw error;
+      return (data ?? []) as Transaction[];
     },
     enabled: !!user,
   });
 }
-
