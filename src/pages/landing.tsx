@@ -26,16 +26,9 @@ export default function Landing() {
         <div className="flex flex-col gap-3 w-full">
           <Button
             onClick={() => setLocation("/kniznica")}
-            className="w-full h-11 text-sm font-semibold rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5"
+            className="w-full max-w-xs mx-auto h-12 text-sm font-semibold rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5"
           >
             Vstúpiť do katalógu
-          </Button>
-          <Button
-            onClick={() => setLocation("/prihlasenie")}
-            variant="outline"
-            className="w-full h-11 text-sm font-semibold rounded-xl border-border/60 text-muted-foreground hover:text-foreground hover:border-border"
-          >
-            Prihlásiť sa
           </Button>
         </div>
 
