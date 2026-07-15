@@ -96,40 +96,95 @@ function CarouselCard({ game, onClick }: { game: any; onClick: () => void }) {
   );
 }
 
-// ── Scrollable horizontal rail ──
+// ── Scrollable horizontal rail with auto-scroll ──
 function GameRail({
   title,
   games,
   onPickGame,
+  autoScroll = false,
 }: {
   title: string;
   games: any[];
   onPickGame: (id: number) => void;
+  autoScroll?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const pausedRef = useRef(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const updateScrollState = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+  }, []);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    updateScrollState();
+    el.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+    return () => {
+      el.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [updateScrollState, games.length]);
+
+  // Auto-scroll
+  useEffect(() => {
+    if (!autoScroll) return;
+    const el = ref.current;
+    if (!el) return;
+
+    let raf: number;
+    const tick = () => {
+      if (!pausedRef.current && el) {
+        el.scrollLeft += 0.5;
+        // Loop back to start when reaching end
+        if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 5) {
+          el.scrollLeft = 0;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [autoScroll]);
 
   const scroll = (dir: "left" | "right") => {
     const el = ref.current;
     if (!el) return;
-    const amount = Math.max(el.clientWidth * 0.8, 200);
+    const amount = Math.max(el.clientWidth * 0.75, 250);
     el.scrollBy({ left: dir === "right" ? amount : -amount, behavior: "smooth" });
   };
 
   if (games.length === 0) return null;
 
   return (
-    <div className="relative">
+    <div
+      className="relative group/rail"
+      onMouseEnter={() => { pausedRef.current = true; }}
+      onMouseLeave={() => { pausedRef.current = false; }}
+    >
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-base font-bold text-foreground">{title}</h2>
       </div>
-      <div className="relative group/carousel">
-        <button
-          onClick={() => scroll("left")}
-          aria-label="Posunúť doľava"
-          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 w-9 h-9 rounded-full bg-card/95 backdrop-blur-sm border border-border/60 text-foreground hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center justify-center shadow-lg shadow-black/30"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
+      <div className="relative">
+        {/* Left fade + arrow */}
+        {canScrollLeft && (
+          <>
+            <div className="absolute left-0 top-0 bottom-2 w-16 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+            <button
+              onClick={() => scroll("left")}
+              aria-label="Posunúť doľava"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 w-9 h-9 rounded-full bg-card/95 backdrop-blur-sm border border-border/60 text-foreground hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center justify-center shadow-lg shadow-black/30 opacity-0 group-hover/rail:opacity-100"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </>
+        )}
 
         <div
           ref={ref}
@@ -140,13 +195,19 @@ function GameRail({
           ))}
         </div>
 
-        <button
-          onClick={() => scroll("right")}
-          aria-label="Posunúť doprava"
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 w-9 h-9 rounded-full bg-card/95 backdrop-blur-sm border border-border/60 text-foreground hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center justify-center shadow-lg shadow-black/30"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
+        {/* Right fade + arrow */}
+        {canScrollRight && (
+          <>
+            <div className="absolute right-0 top-0 bottom-2 w-16 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+            <button
+              onClick={() => scroll("right")}
+              aria-label="Posunúť doprava"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 w-9 h-9 rounded-full bg-card/95 backdrop-blur-sm border border-border/60 text-foreground hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center justify-center shadow-lg shadow-black/30 opacity-0 group-hover/rail:opacity-100"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -365,13 +426,29 @@ export default function Library() {
   );
 
 
-  // ── New & Trending: recent games (2024–2026), sorted by year desc ──
-  const newTrending = useMemo(() => {
+  // ── Novinky: recent releases (2024+) sorted by year desc ──
+  const novinky = useMemo(() => {
     return games
-      .filter((g: any) => safeNum(g.year) >= 2024)
+      .filter((g: any) => safeNum(g.year) >= 2024 && g.available)
       .sort((a: any, b: any) => safeNum(b.year) - safeNum(a.year))
-      .slice(0, 20);
+      .slice(0, 25);
   }, [games]);
+
+  // ── Trendy: highest-rated games, exclude ones already in novinky ──
+  const trendy = useMemo(() => {
+    const novinkyIds = new Set(novinky.map((g: any) => g.id));
+    return games
+      .filter((g: any) => {
+        const r = parseInt(safeStr(g.rating), 10) || 0;
+        return r >= 75 && g.available && !novinkyIds.has(g.id);
+      })
+      .sort((a: any, b: any) => {
+        const ra = parseInt(safeStr(a.rating), 10) || 0;
+        const rb = parseInt(safeStr(b.rating), 10) || 0;
+        return rb - ra;
+      })
+      .slice(0, 25);
+  }, [games, novinky]);
 
   if (isLoading && !games.length) {
     return <LibrarySkeleton />;
@@ -380,8 +457,9 @@ export default function Library() {
   return (
     <div className="flex flex-col gap-10">
 
-      {/* ── New & Trending rail ── */}
-      <GameRail title="Novinky & Trendy" games={newTrending} onPickGame={pickGame} />
+      {/* ── Novinky & Trendy rails ── */}
+      <GameRail title="Novinky" games={novinky} onPickGame={pickGame} autoScroll />
+      <GameRail title="Trendy" games={trendy} onPickGame={pickGame} />
 
       {/* ── Featured banner ── */}
       {featured && (
