@@ -226,6 +226,21 @@ export default function Library() {
   const searchBoxRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const genreContainerRef = useRef<HTMLDivElement>(null);
+  const genreScrollRef = useRef<HTMLDivElement>(null);
+  const [genreCanScrollRight, setGenreCanScrollRight] = useState(false);
+
+  const updateGenreFade = useCallback(() => {
+    const el = genreContainerRef.current;
+    if (!el) return;
+    setGenreCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+  }, []);
+
+  useEffect(() => {
+    updateGenreFade();
+    window.addEventListener("resize", updateGenreFade);
+    return () => window.removeEventListener("resize", updateGenreFade);
+  }, [updateGenreFade]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
@@ -249,6 +264,9 @@ export default function Library() {
     const unique = Array.from(new Set(labeled));
     return ["Všetky", ...unique];
   }, [games]);
+
+  // Re-check genre fade when genres change
+  useEffect(() => { updateGenreFade(); }, [genres, updateGenreFade]);
 
   const labelToRawGenres = (label: string): string[] =>
     Object.entries(GENRE_LABELS)
@@ -615,8 +633,12 @@ export default function Library() {
         </div>
 
         {/* Genre pills - horizontally scrollable with fade */}
-        <div className="relative">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 -mb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="relative" ref={genreScrollRef}>
+          <div
+            ref={genreContainerRef}
+            onScroll={updateGenreFade}
+            className="flex items-center gap-1.5 overflow-x-auto pb-2 -mb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
             {genres.map((g) => (
               <button
                 key={g}
@@ -631,7 +653,9 @@ export default function Library() {
               </button>
             ))}
           </div>
-          <div className="absolute top-0 right-0 bottom-2 w-16 bg-background pointer-events-none" />
+          {genreCanScrollRight && (
+            <div className="absolute top-0 right-0 bottom-2 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none z-10" />
+          )}
         </div>
       </div>
 
