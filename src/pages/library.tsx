@@ -459,7 +459,9 @@ export default function Library() {
 
       {/* ── Novinky & Trendy rails ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <GameRail title="Novinky" games={novinky} onPickGame={pickGame} autoScroll />
+        <div className="hidden lg:block">
+          <GameRail title="Novinky" games={novinky} onPickGame={pickGame} autoScroll />
+        </div>
         <GameRail title="Trendy" games={trendy} onPickGame={pickGame} />
       </div>
 
