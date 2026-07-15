@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { useCancelPassRequest, usePassRequests, useRequestPass } from "@/hooks/usePassRequests";
+import { usePass } from "@/hooks/usePass";
 import { PassesSkeleton } from "@/components/skeletons";
-import { ArrowRight, Check, Clock, CreditCard, Infinity, Sparkles } from "lucide-react";
+import { ArrowRight, Check, CheckCircle, Clock, CreditCard, Infinity, Sparkles } from "lucide-react";
 
 const PLANS = [
   {
@@ -34,10 +35,12 @@ const PLANS = [
 
 export default function Passes() {
   const { data: requests = [], isLoading } = usePassRequests();
+  const { data: activePass } = usePass();
   const requestPass = useRequestPass();
   const cancelRequest = useCancelPassRequest();
   const pendingRequest = requests.find((request) => request.status === "pending");
   const pendingPlan = PLANS.find((plan) => plan.id === pendingRequest?.pass_type);
+  const activePassType = activePass?.pass_type;
 
   if (pendingRequest) {
     return (
@@ -84,9 +87,19 @@ export default function Passes() {
           return (
             <div
               key={plan.id}
-              className={`relative bg-card border rounded-2xl p-6 sm:p-8 flex flex-col gap-6 transition-all duration-200 ${plan.accent}`}
+              className={`relative bg-card border rounded-2xl p-6 sm:p-8 flex flex-col gap-6 transition-all duration-200 ${
+                activePassType === plan.id
+                  ? "border-emerald-500/50 shadow-lg shadow-emerald-500/10"
+                  : plan.accent
+              }`}
             >
-              {plan.badge && (
+              {activePassType === plan.id && (
+                <div className="absolute -top-3 left-6 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-md shadow-emerald-500/30 flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  Aktívny
+                </div>
+              )}
+              {!activePassType && plan.badge && (
                 <div className="absolute -top-3 left-6 bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-md shadow-primary/30">
                   {plan.badge}
                 </div>
@@ -121,16 +134,27 @@ export default function Passes() {
 
               <Button
                 onClick={() => requestPass.mutate(plan.id)}
-                disabled={requestPass.isPending || isLoading}
+                disabled={requestPass.isPending || isLoading || activePassType === plan.id}
                 data-testid={plan.testid}
                 className={`w-full h-11 font-semibold text-sm rounded-xl flex items-center justify-center gap-2 mt-auto transition-all ${
-                  plan.badge
-                    ? "bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 hover:-translate-y-0.5"
-                    : "bg-card hover:bg-primary/10 border border-border hover:border-primary/50 text-foreground"
+                  activePassType === plan.id
+                    ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 cursor-default"
+                    : plan.badge
+                      ? "bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 hover:-translate-y-0.5"
+                      : "bg-card hover:bg-primary/10 border border-border hover:border-primary/50 text-foreground"
                 }`}
               >
-                {requestPass.isPending ? "Odosielam..." : plan.cta}
-                <ArrowRight className="w-4 h-4" />
+                {activePassType === plan.id ? (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    Máš tento pas
+                  </>
+                ) : (
+                  <>
+                    {requestPass.isPending ? "Odosielam..." : plan.cta}
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </Button>
             </div>
           );
