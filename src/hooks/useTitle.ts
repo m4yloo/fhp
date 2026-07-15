@@ -25,6 +25,6 @@ export function useTitle() {
       page = "Hra";
     }
 
-    document.title = page ? `${base} / ${page}` : base;
+    document.title = page ? `${base} | ${page}` : base;
   }, [location]);
 }
