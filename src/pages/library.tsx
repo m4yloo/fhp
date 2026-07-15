@@ -157,7 +157,7 @@ export default function Library() {
   const games = data?.pages?.flat() ?? [];
   const [selectedGenre, setSelectedGenre] = useState("Všetky");
   const [selectedDecade, setSelectedDecade] = useState("Všetky");
-  const [sortBy, setSortBy] = useState<"rating" | "year" | "name" | "newest">("rating");
+  const [sortBy, setSortBy] = useState<"rating" | "year" | "name" | "newest" | "shuffle">("newest");
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [broadSearchTerm, setBroadSearchTerm] = useState("");
@@ -254,6 +254,12 @@ export default function Library() {
       case "newest":
         arr.sort((a: any, b: any) => safeNum(b.year) - safeNum(a.year));
         break;
+      case "shuffle":
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        break;
     }
     return arr;
   }, [filtered, sortBy]);
@@ -304,7 +310,8 @@ export default function Library() {
       const rb = parseInt(safeStr(b.rating), 10) || 0;
       return rb - ra;
     });
-    setFeatured(rated[0]);
+    const pool = rated.slice(0, 20);
+    setFeatured(pool[Math.floor(Math.random() * pool.length)]);
   }, [selectedGenre, selectedDecade, broadSearchTerm, games.length]);
 
 
@@ -428,6 +435,7 @@ export default function Library() {
               <SelectContent>
                 <SelectItem value="rating">Hodnotenie</SelectItem>
                 <SelectItem value="newest">Najnovšie</SelectItem>
+                <SelectItem value="shuffle">Náhodne</SelectItem>
                 <SelectItem value="year">Rok vzostupne</SelectItem>
                 <SelectItem value="name">Názov A–Z</SelectItem>
               </SelectContent>
