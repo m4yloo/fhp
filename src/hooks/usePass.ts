@@ -20,7 +20,7 @@ export function usePass() {
     queryKey: ["activePass", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("passes")
+        .from("user_passes")
         .select("*")
         .eq("user_id", user!.id)
         .eq("status", "active")

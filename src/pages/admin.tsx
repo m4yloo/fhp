@@ -153,7 +153,7 @@ export default function Admin() {
         if (request) {
           const expiresAt = new Date();
           expiresAt.setMonth(expiresAt.getMonth() + 4);
-          const { error: passError } = await supabase.from("passes").insert({
+          const { error: passError } = await supabase.from("user_passes").insert({
             user_id: request.user_id,
             name:
               request.pass_type === "unlimited"
