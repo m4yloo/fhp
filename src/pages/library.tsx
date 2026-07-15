@@ -299,18 +299,22 @@ export default function Library() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Featured banner: random highly-rated game from the current filter.
-  // Use a ref to track the last filter key so we only re-pick when filters change, not when games load.
+  // Re-pick when filters change, or when filtered goes from empty to non-empty (data loaded).
   const lastFilterKey = useRef("");
   const [featured, setFeatured] = useState<any>(null);
   useEffect(() => {
     const filterKey = `${selectedGenre}-${selectedDecade}-${broadSearchTerm}`;
-    if (filterKey === lastFilterKey.current) return;
-    lastFilterKey.current = filterKey;
 
     if (filtered.length === 0) {
       setFeatured(null);
+      lastFilterKey.current = filterKey;
       return;
     }
+
+    // Only re-pick if filter key changed or we had no featured yet
+    if (filterKey === lastFilterKey.current && featured) return;
+    lastFilterKey.current = filterKey;
+
     const rated = [...filtered].sort((a: any, b: any) => {
       const ra = parseInt(safeStr(a.rating), 10) || 0;
       const rb = parseInt(safeStr(b.rating), 10) || 0;
