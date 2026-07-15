@@ -46,7 +46,7 @@ export function AdminUserModal({ userId, onClose }: Props) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_passes")
-        .select("*")
+        .select("id, user_id, pass_type, status, games_allowed, games_claimed, expires_at, created_at")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -61,11 +61,11 @@ export function AdminUserModal({ userId, onClose }: Props) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_games")
-        .select("*, game:games(title, platform, cover_url)")
+        .select("id, game_id, license_key, acquired_at, game:games(title, platform, cover_url)")
         .eq("user_id", userId)
         .order("acquired_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as AdminUserGame[];
+      return (data ?? []) as unknown as AdminUserGame[];
     },
     enabled: tab === "games",
   });
@@ -275,6 +275,7 @@ export function AdminUserModal({ userId, onClose }: Props) {
                   {userGames.map((item) => {
                     const isRevealed = revealKeyId === item.game_id;
                     const isCopied = copiedKeyId === item.game_id;
+                    const gameData = Array.isArray(item.game) ? item.game[0] : item.game;
                     return (
                       <div
                         key={item.id}
@@ -283,10 +284,10 @@ export function AdminUserModal({ userId, onClose }: Props) {
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="font-medium text-sm text-foreground truncate">
-                              {item.game?.title ?? `Hra #${item.game_id}`}
+                              {gameData?.title ?? `Hra #${item.game_id}`}
                             </div>
                             <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                              {item.game?.platform} · {new Date(item.acquired_at).toLocaleDateString("sk-SK")}
+                              {gameData?.platform} · {new Date(item.acquired_at).toLocaleDateString("sk-SK")}
                             </div>
                           </div>
                         </div>
