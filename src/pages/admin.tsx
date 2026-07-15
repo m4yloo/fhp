@@ -88,7 +88,7 @@ export default function Admin() {
           .select("id", { count: "exact", head: true })
           .eq("status", "pending"),
         supabase
-          .from("passes")
+          .from("user_passes")
           .select("id", { count: "exact", head: true })
           .eq("status", "active"),
         supabase.from("user_games").select("id", { count: "exact", head: true }),
@@ -146,25 +146,6 @@ export default function Admin() {
         .update({ status, updated_at: new Date().toISOString() })
         .eq("id", id);
       if (error) throw error;
-
-      // If approved, create the pass
-      if (status === "approved") {
-        const request = passRequests.find((r) => r.id === id);
-        if (request) {
-          const expiresAt = new Date();
-          expiresAt.setMonth(expiresAt.getMonth() + 4);
-          const { error: passError } = await supabase.from("user_passes").insert({
-            user_id: request.user_id,
-            pass_type: request.pass_type,
-            games_allowed: request.pass_type === "unlimited" ? 100 : 12,
-            games_claimed: 0,
-            started_at: new Date().toISOString(),
-            expires_at: expiresAt.toISOString(),
-            status: "active",
-          });
-          if (passError) console.error("Failed to create pass:", passError);
-        }
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminPassRequests"] });

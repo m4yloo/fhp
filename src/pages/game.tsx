@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useGame } from "@/hooks/useGame";
 import { useClaimGame } from "@/hooks/useClaimGame";
 import { useUserGames } from "@/hooks/useUserGames";
@@ -79,7 +78,7 @@ export default function GameDetail() {
       </button>
 
       {/* Hero Header Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-[290px_1fr] gap-5 lg:gap-10 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-5 lg:gap-10 items-start">
         {/* ── Left Side: Game Cover & Actions ── */}
         <div className="flex flex-col gap-4 w-full lg:sticky lg:top-6">
           <div className="relative aspect-[3/4] bg-[#0c0b11] border border-border/80 overflow-hidden rounded-xl shadow-2xl group">
@@ -98,29 +97,29 @@ export default function GameDetail() {
           </div>
 
           {/* Quick Specifications table */}
-          <div className="border border-border/60 bg-[#08080c] rounded-xl p-4 space-y-3.5 text-xs font-mono shadow-lg">
+          <div className="border border-border/60 bg-[#08080c] rounded-xl p-5 space-y-4 text-[13px] font-mono shadow-lg">
             <div className="flex justify-between items-center border-b border-border/40 pb-3">
-              <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Platforma</span>
+              <span className="text-muted-foreground uppercase tracking-wider text-[11px]">Platforma</span>
               <span className="text-foreground font-semibold uppercase">{game.platform}</span>
             </div>
             <div className="flex justify-between items-center border-b border-border/40 pb-3">
-              <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Žáner</span>
+              <span className="text-muted-foreground uppercase tracking-wider text-[11px]">Žáner</span>
               <span className="text-foreground font-semibold text-right">{game.genre}</span>
             </div>
             <div className="flex justify-between items-center border-b border-border/40 pb-3">
-              <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Rok Vydania</span>
+              <span className="text-muted-foreground uppercase tracking-wider text-[11px]">Rok Vydania</span>
               <span className="text-foreground font-semibold">{game.year}</span>
             </div>
             <div className="flex justify-between items-center border-b border-border/40 pb-3">
-              <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Developer</span>
-              <span className="text-foreground font-semibold truncate max-w-[130px] text-right">{game.developer}</span>
+              <span className="text-muted-foreground uppercase tracking-wider text-[11px]">Developer</span>
+              <span className="text-foreground font-semibold truncate max-w-[150px] text-right">{game.developer}</span>
             </div>
             <div className="flex justify-between items-center border-b border-border/40 pb-3">
-              <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Veľkosť</span>
+              <span className="text-muted-foreground uppercase tracking-wider text-[11px]">Veľkosť</span>
               <span className="text-foreground font-semibold">{game.size}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Stav kľúčov</span>
+              <span className="text-muted-foreground uppercase tracking-wider text-[11px]">Stav kľúčov</span>
               <span className={game.available ? "text-primary font-semibold" : "text-muted-foreground"}>
                 {game.available ? "Na sklade" : "Vypredané"}
               </span>
@@ -226,155 +225,83 @@ export default function GameDetail() {
             </p>
           </div>
 
-          {/* ── Tabs ── */}
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="w-full justify-start bg-transparent border-b border-border/40 p-0 rounded-none gap-4 sm:gap-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <TabsTrigger
-                value="overview"
-                className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary text-muted-foreground hover:text-foreground text-xs font-mono px-0 py-3 rounded-none border-b-2 border-transparent transition-all"
-              >
-                Prehľad
-              </TabsTrigger>
-              <TabsTrigger
-                value="details"
-                className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary text-muted-foreground hover:text-foreground text-xs font-mono px-0 py-3 rounded-none border-b-2 border-transparent transition-all"
-              >
-                Podrobnosti
-              </TabsTrigger>
-              <TabsTrigger
-                value="system"
-                className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary text-muted-foreground hover:text-foreground text-xs font-mono px-0 py-3 rounded-none border-b-2 border-transparent transition-all"
-              >
-                Systém
-              </TabsTrigger>
-            </TabsList>
-
-            {/* ── Tab: Prehľad ── */}
-            <TabsContent value="overview" className="mt-7 space-y-7 animate-in fade-in duration-300">
-              {/* Long description */}
+          {/* ── All sections visible ── */}
+          <div className="w-full space-y-10">
+            {/* ── Prehľad ── */}
+            <section className="space-y-5">
+              <h3 className="text-[11px] font-mono uppercase tracking-widest text-primary">Prehľad</h3>
               <div className="space-y-5">
                 {(game.long_description || "").split("\n\n").map((para: string, i: number) => (
-                  <p key={i} className="text-[#c4c4c9] leading-relaxed text-sm sm:text-base">
+                  <p key={i} className="text-[#c4c4c9] leading-relaxed text-sm sm:text-[15px]">
                     {para}
                   </p>
                 ))}
               </div>
-
-              {/* Tags */}
               <div className="flex flex-wrap gap-2.5 pt-3">
                 {(game.tags || []).map((tag: string, idx: number) => (
                   <span
                     key={idx}
-                    className="px-3 py-1.5 bg-card border border-border/60 rounded-lg text-[11px] font-mono text-muted-foreground hover:border-primary/50 hover:text-foreground transition-all"
+                    className="px-3 py-1.5 bg-card border border-border/60 rounded-lg text-xs font-mono text-muted-foreground hover:border-primary/50 hover:text-foreground transition-all"
                   >
                     {tag}
                   </span>
                 ))}
               </div>
-            </TabsContent>
+            </section>
 
-            {/* ── Tab: Podrobnosti ── */}
-            <TabsContent value="details" className="mt-6 space-y-6">
-              {/* Info grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs font-mono">
-                <InfoRow icon={<User className="w-3.5 h-3.5" />} label="Developer" value={game.developer} />
-                <InfoRow icon={<Building2 className="w-3.5 h-3.5" />} label="Publisher" value={game.publisher} />
-                <InfoRow icon={<Layers className="w-3.5 h-3.5" />} label="Žáner" value={game.genre} />
-                <InfoRow icon={<Monitor className="w-3.5 h-3.5" />} label="Platforma" value={game.platform} />
-                <InfoRow icon={<Calendar className="w-3.5 h-3.5" />} label="Rok vydania" value={String(game.year)} />
-                <InfoRow icon={<HardDrive className="w-3.5 h-3.5" />} label="Veľkosť" value={game.size} />
-                <InfoRow icon={<Star className="w-3.5 h-3.5" />} label="Hodnotenie" value={game.rating} />
+            <div className="border-t border-border/40" />
+
+            {/* ── Podrobnosti ── */}
+            <section className="space-y-6">
+              <h3 className="text-[11px] font-mono uppercase tracking-widest text-primary">Podrobnosti</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-[13px] font-mono">
+                <InfoRow icon={<User className="w-4 h-4" />} label="Developer" value={game.developer} />
+                <InfoRow icon={<Building2 className="w-4 h-4" />} label="Publisher" value={game.publisher} />
+                <InfoRow icon={<Layers className="w-4 h-4" />} label="Žáner" value={game.genre} />
+                <InfoRow icon={<Monitor className="w-4 h-4" />} label="Platforma" value={game.platform} />
+                <InfoRow icon={<Calendar className="w-4 h-4" />} label="Rok vydania" value={String(game.year)} />
+                <InfoRow icon={<HardDrive className="w-4 h-4" />} label="Veľkosť" value={game.size} />
+                <InfoRow icon={<Star className="w-4 h-4" />} label="Hodnotenie" value={game.rating} />
                 <InfoRow
-                  icon={<Tag className="w-3.5 h-3.5" />}
+                  icon={<Tag className="w-4 h-4" />}
                   label="Stav"
                   value={game.available ? "Dostupné" : "Vypredané"}
                   valueClass={game.available ? "text-primary" : "text-muted-foreground"}
                 />
               </div>
+            </section>
 
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 pt-1">
-                {(game.tags || []).map((tag: string, idx: number) => (
-                  <span
-                    key={idx}
-                    className="px-2.5 py-1 bg-card border border-border/80 rounded-md text-[10px] font-mono text-muted-foreground"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
+            <div className="border-t border-border/40" />
 
-              {/* Features (only if they look real) */}
-              {(game.features || []).length > 0 && (
-                <div className="space-y-2.5">
-                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Funkcie</h4>
-                  <ul className="space-y-1.5 text-xs text-[#c4c4c9]">
-                    {game.features.map((f: string, i: number) => (
-                      <li key={i} className="flex items-start gap-1.5">
-                        <span className="text-primary mt-0.5">•</span>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
+            {/* ── Systém ── */}
+            <section className="space-y-6">
+              <h3 className="text-[11px] font-mono uppercase tracking-widest text-primary flex items-center gap-1.5">
+                <Cpu className="w-4 h-4" /> Systémové požiadavky
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 font-mono text-xs leading-relaxed">
+                <div className="bg-[#08080c] border border-border/50 p-5 rounded-xl space-y-2.5">
+                  <div className="text-muted-foreground uppercase text-[11px] font-bold border-b border-border/30 pb-1.5 text-primary">
+                    Minimálne požiadavky
+                  </div>
+                  <div><span className="text-muted-foreground">OS:</span> {(game.sys_requirements_min || {}).os || '-'}</div>
+                  <div><span className="text-muted-foreground">CPU:</span> {(game.sys_requirements_min || {}).cpu || '-'}</div>
+                  <div><span className="text-muted-foreground">RAM:</span> {(game.sys_requirements_min || {}).ram || '-'}</div>
+                  <div><span className="text-muted-foreground">GPU:</span> {(game.sys_requirements_min || {}).gpu || '-'}</div>
+                  <div><span className="text-muted-foreground">Disk:</span> {(game.sys_requirements_min || {}).storage || '-'}</div>
                 </div>
-              )}
-            </TabsContent>
-
-            {/* ── Tab: Systém ── */}
-            <TabsContent value="system" className="mt-6 space-y-6">
-              <div>
-                <h3 className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 mb-4">
-                  <Cpu className="w-3.5 h-3.5" /> Hardvérové Požiadavky
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 font-mono text-[11px] leading-relaxed">
-                  {/* Minimum */}
-                  <div className="bg-[#08080c] border border-border/50 p-4 rounded-xl space-y-2">
-                    <div className="text-muted-foreground uppercase text-[10px] font-bold border-b border-border/30 pb-1.5 text-primary">
-                      Minimálne požiadavky
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">OS:</span> {(game.sys_requirements_min || {}).os || '-'}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">CPU:</span> {(game.sys_requirements_min || {}).cpu || '-'}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">RAM:</span> {(game.sys_requirements_min || {}).ram || '-'}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">GPU:</span> {(game.sys_requirements_min || {}).gpu || '-'}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Disk:</span> {(game.sys_requirements_min || {}).storage || '-'}
-                    </div>
+                <div className="bg-[#08080c] border border-primary/10 p-5 rounded-xl space-y-2.5">
+                  <div className="text-muted-foreground uppercase text-[11px] font-bold border-b border-border/30 pb-1.5 text-[#e3e3e6]">
+                    Odporúčané požiadavky
                   </div>
-
-                  {/* Recommended */}
-                  <div className="bg-[#08080c] border border-primary/10 p-4 rounded-xl space-y-2">
-                    <div className="text-muted-foreground uppercase text-[10px] font-bold border-b border-border/30 pb-1.5 text-[#e3e3e6]">
-                      Odporúčané požiadavky
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">OS:</span> {(game.sys_requirements_rec || {}).os || '-'}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">CPU:</span> {(game.sys_requirements_rec || {}).cpu || '-'}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">RAM:</span> {(game.sys_requirements_rec || {}).ram || '-'}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">GPU:</span> {(game.sys_requirements_rec || {}).gpu || '-'}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Disk:</span> {(game.sys_requirements_rec || {}).storage || '-'}
-                    </div>
-                  </div>
+                  <div><span className="text-muted-foreground">OS:</span> {(game.sys_requirements_rec || {}).os || '-'}</div>
+                  <div><span className="text-muted-foreground">CPU:</span> {(game.sys_requirements_rec || {}).cpu || '-'}</div>
+                  <div><span className="text-muted-foreground">RAM:</span> {(game.sys_requirements_rec || {}).ram || '-'}</div>
+                  <div><span className="text-muted-foreground">GPU:</span> {(game.sys_requirements_rec || {}).gpu || '-'}</div>
+                  <div><span className="text-muted-foreground">Disk:</span> {(game.sys_requirements_rec || {}).storage || '-'}</div>
                 </div>
               </div>
-            </TabsContent>
-          </Tabs>
+            </section>
+          </div>
         </div>
       </div>
     </div>
@@ -394,9 +321,9 @@ function InfoRow({
   valueClass?: string;
 }) {
   return (
-    <div className="flex items-center gap-2.5 bg-card/50 border border-border/40 rounded-lg px-3 py-2.5">
+    <div className="flex items-center gap-2.5 bg-card/50 border border-border/40 rounded-lg px-3.5 py-3">
       <span className="text-muted-foreground shrink-0">{icon}</span>
-      <span className="text-muted-foreground uppercase tracking-wider text-[9px] shrink-0">{label}</span>
+      <span className="text-muted-foreground uppercase tracking-wider text-[10px] shrink-0">{label}</span>
       <span className={`ml-auto text-foreground font-semibold text-right truncate ${valueClass || ""}`}>{value}</span>
     </div>
   );

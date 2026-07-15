@@ -5,11 +5,12 @@ import { useAuthContext } from "@/lib/auth-provider";
 export interface Transaction {
   id: string;
   user_id: string;
-  type: string;
-  item: string;
-  amount: string;
-  status: string;
-  hash: string;
+  game_id: number | null;
+  pass_id: string | null;
+  transaction_type: string;
+  amount: number | null;
+  description: string;
+  metadata: Record<string, unknown>;
   created_at: string;
 }
 

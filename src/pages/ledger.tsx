@@ -17,9 +17,10 @@ import {
 } from "lucide-react";
 
 const TYPE_LABELS: Record<string, string> = {
-  Získanie: "Získanie",
-  Nákup: "Nákup",
-  Vrátenie: "Vrátenie",
+  game_claim: "Získanie",
+  pass_purchase: "Nákup",
+  pass_renewal: "Obnovenie",
+  pass_upgrade: "Upgrade",
 };
 
 export default function Ledger() {
@@ -33,9 +34,9 @@ export default function Ledger() {
   const filteredData = useMemo(() => {
     return transactions.filter((row) => {
       const matchesSearch =
-        row.item.toLowerCase().includes(search.toLowerCase()) ||
+        row.description.toLowerCase().includes(search.toLowerCase()) ||
         row.id.toLowerCase().includes(search.toLowerCase());
-      const matchesType = filterType === "all" || row.type === filterType;
+      const matchesType = filterType === "all" || row.transaction_type === filterType;
       return matchesSearch && matchesType;
     });
   }, [filterType, search, transactions]);
@@ -79,15 +80,15 @@ export default function Ledger() {
             className="bg-card border border-border/60 text-xs px-3 rounded-xl focus:outline-none focus:border-primary text-muted-foreground cursor-pointer font-mono h-9 shrink-0"
           >
             <option value="all">Všetky</option>
-            <option value="Získanie">Získanie</option>
-            <option value="Nákup">Nákup</option>
-            <option value="Vrátenie">Vrátenie</option>
+            <option value="game_claim">Získanie</option>
+            <option value="pass_purchase">Nákup</option>
+            <option value="pass_renewal">Obnovenie</option>
+            <option value="pass_upgrade">Upgrade</option>
           </select>
         </div>
       </div>
 
       <div className="bg-card border border-border/60 rounded-2xl overflow-hidden">
-        {/* ── Desktop: table ── */}
         {!isMobile ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
@@ -103,7 +104,7 @@ export default function Ledger() {
               </thead>
               <tbody className="divide-y divide-border/30">
                 {filteredData.map((row) => {
-                  const TypeIcon = row.type === "game_claim" ? Package : TrendingUp;
+                  const TypeIcon = row.transaction_type === "game_claim" ? Package : TrendingUp;
                   const hash = row.id.replaceAll("-", "");
 
                   return (
@@ -121,11 +122,11 @@ export default function Ledger() {
                       <td className="px-5 py-4">
                         <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold font-mono px-2 py-1 rounded-lg border bg-violet-500/10 border-violet-500/20 text-violet-400">
                           <TypeIcon className="w-3 h-3" />
-                          {TYPE_LABELS[row.type] ?? row.type}
+                          {TYPE_LABELS[row.transaction_type] ?? row.transaction_type}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-foreground font-medium text-sm">
-                        {row.item}
+                        {row.description}
                       </td>
                       <td className="px-5 py-4 font-mono text-right font-semibold whitespace-nowrap text-sm text-muted-foreground">
                         {!row.amount ? "-" : row.amount}
@@ -146,10 +147,9 @@ export default function Ledger() {
             </table>
           </div>
         ) : (
-          /* ── Mobile: card list ── */
           <div className="divide-y divide-border/30">
             {filteredData.map((row) => {
-              const TypeIcon = row.type === "game_claim" ? Package : TrendingUp;
+              const TypeIcon = row.transaction_type === "game_claim" ? Package : TrendingUp;
               const hash = row.id.replaceAll("-", "");
 
               return (
@@ -161,13 +161,13 @@ export default function Ledger() {
                   <div className="flex items-center justify-between gap-2">
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold font-mono px-2 py-0.5 rounded-md bg-violet-500/10 border border-violet-500/20 text-violet-400">
                       <TypeIcon className="w-3 h-3" />
-                      {TYPE_LABELS[row.type] ?? row.type}
+                      {TYPE_LABELS[row.transaction_type] ?? row.transaction_type}
                     </span>
                     <span className="font-mono text-xs text-muted-foreground">
                       {new Date(row.created_at).toLocaleDateString("sk-SK")}
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-foreground">{row.item}</p>
+                  <p className="text-sm font-medium text-foreground">{row.description}</p>
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-xs font-semibold text-muted-foreground">
                       {!row.amount ? "-" : row.amount}
@@ -261,4 +261,3 @@ export default function Ledger() {
     </div>
   );
 }
-

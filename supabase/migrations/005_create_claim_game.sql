@@ -48,21 +48,28 @@ BEGIN
     RAISE EXCEPTION 'Game already claimed';
   END IF;
 
-  INSERT INTO public.user_games (user_id, game_id, status)
-  VALUES (auth.uid(), requested_game_id, 'doručené')
+  INSERT INTO public.user_games (user_id, game_id, pass_id, license_key, status)
+  VALUES (
+    auth.uid(),
+    requested_game_id,
+    active_pass.id,
+    md5(random()::text || clock_timestamp()::text),
+    'claimed'
+  )
   RETURNING * INTO claimed_game;
 
   UPDATE public.user_passes
   SET games_claimed = games_claimed + 1
   WHERE id = active_pass.id;
 
-  INSERT INTO public.transactions (user_id, type, item, amount, status)
+  INSERT INTO public.transactions (user_id, game_id, pass_id, transaction_type, description, metadata)
   VALUES (
     auth.uid(),
-    'Získanie',
-    game_title,
-    '-1 hra',
-    'doručené'
+    requested_game_id,
+    active_pass.id,
+    'game_claim',
+    'Game claimed: ' || game_title,
+    '{}'::jsonb
   );
 
   RETURN claimed_game;

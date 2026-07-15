@@ -288,23 +288,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <CommandPalette />
 
       {/* ── Sidebar ── */}
-      <aside className="w-72 shrink-0 h-full overflow-hidden bg-sidebar/60 backdrop-blur-xl border-r border-border/60 flex flex-col relative">
-        <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-primary/8 rounded-full blur-3xl" />
-
-        <div className="flex flex-col h-full p-5 gap-5 overflow-hidden relative z-10">
+      <aside className="w-72 shrink-0 h-full overflow-hidden bg-background border-r border-border/50 flex flex-col">
+        <div className="flex flex-col h-full p-5 gap-5 overflow-hidden">
           <Link href="/kniznica" className="flex items-center gap-3 py-1 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md group-hover:bg-primary/30 transition-colors" />
-              <Logo size={44} className="relative group-hover:scale-105 transition-transform shrink-0" />
-            </div>
+            <Logo size={44} className="shrink-0" />
             <div className="text-left leading-none">
-              <div className="font-extrabold text-base tracking-tight text-foreground">FHP</div>
-              <div className="text-[10px] font-mono text-muted-foreground mt-0.5">Herné Poklady</div>
+              <div className="font-extrabold text-lg tracking-tight text-foreground">FHP</div>
+              <div className="text-[11px] font-mono text-muted-foreground mt-0.5">Herné Poklady</div>
             </div>
           </Link>
 
           <nav className="flex flex-col gap-0.5">
-            <div className="px-3 mb-1 text-[9px] font-mono font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">
+            <div className="px-3 mb-1 text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">
               Menu
             </div>
             {NAV_ITEMS.map((item) => {
@@ -316,21 +311,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   data-testid={`nav-${item.href.replace("/", "")}`}
                   className={`
-                    relative group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200
+                    flex items-center gap-3 px-3 py-3 rounded-xl text-[15px] transition-all duration-200
                     ${active
-                      ? "bg-primary/12 text-primary font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
-                      : "text-muted-foreground hover:text-foreground hover:bg-card/60 hover:translate-x-0.5"
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-primary/5"
                     }
                   `}
                 >
-                  {active && (
-                    <>
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-primary shadow-[0_0_12px_2px] shadow-primary/50" />
-                      <span className="pointer-events-none absolute inset-0 rounded-lg ring-1 ring-primary/10" />
-                    </>
-                  )}
                   <Icon
-                    className={`w-4 h-4 shrink-0 transition-all ${active ? "text-primary" : "text-muted-foreground/70 group-hover:text-foreground"}`}
+                    className={`w-5 h-5 shrink-0 ${active ? "text-primary" : "text-muted-foreground/70"}`}
                     strokeWidth={active ? 2.4 : 2}
                   />
                   <span className="flex-1 leading-none">{item.label}</span>
@@ -341,21 +330,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Link
                 href="/admin"
                 className={`
-                  relative group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200
+                  flex items-center gap-3 px-3 py-3 rounded-xl text-[15px] transition-all duration-200
                   ${isActive("/admin")
-                    ? "bg-primary/12 text-primary font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
-                    : "text-muted-foreground hover:text-foreground hover:bg-card/60 hover:translate-x-0.5"
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-primary/5"
                   }
                 `}
               >
-                {isActive("/admin") && (
-                  <>
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-primary shadow-[0_0_12px_2px] shadow-primary/50" />
-                    <span className="pointer-events-none absolute inset-0 rounded-lg ring-1 ring-primary/10" />
-                  </>
-                )}
                 <Shield
-                  className={`w-4 h-4 shrink-0 transition-all ${isActive("/admin") ? "text-primary" : "text-muted-foreground/70 group-hover:text-foreground"}`}
+                  className={`w-5 h-5 shrink-0 ${isActive("/admin") ? "text-primary" : "text-muted-foreground/70"}`}
                   strokeWidth={isActive("/admin") ? 2.4 : 2}
                 />
                 <span className="flex-1 leading-none">Admin</span>
@@ -368,30 +351,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <>
                 <Link
                   href="/pasy"
-                  className="relative overflow-hidden rounded-xl border border-primary/25 bg-card p-4 group transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10"
+                  className="overflow-hidden rounded-2xl border border-border/50 bg-background p-5 transition-all hover:border-primary/30"
                 >
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center">
-                      <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex flex-col leading-none">
-                      <span className="text-[8px] font-mono uppercase tracking-[0.12em] text-primary/80 font-semibold">
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-primary font-semibold">
                         {hasPass ? "Aktívny pas" : "Členstvo"}
                       </span>
-                      <span className="text-xs font-bold text-foreground mt-0.5">
+                      <span className="text-xs font-bold text-foreground mt-1">
                         {hasPass ? passName : "Žiadny aktívny pas"}
                       </span>
                     </div>
                   </div>
-                  <div className="mb-2 flex items-end justify-between">
+                  <div className="mb-2.5 flex items-end justify-between">
                     <span className="text-[11px] font-mono text-muted-foreground">
                       {hasPass ? `${gamesClaimed} / ${gamesAllowed} hier` : "Požiadať o pas"}
                     </span>
-                    <span className="text-[10px] font-mono font-bold text-primary">
+                    <span className="text-[11px] font-mono font-bold text-primary">
                       {percentage}%
                     </span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-background/60 overflow-hidden">
+                  <div className="h-2 rounded-full bg-border/50 overflow-hidden">
                     <div
                       className="h-full bg-primary rounded-full transition-all duration-500"
                       style={{ width: `${percentage}%` }}
@@ -399,32 +382,32 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </div>
                 </Link>
 
-                <div className="h-px bg-border/40" />
+                <div className="h-px bg-border/50" />
 
-                <div className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-card/40 transition-colors">
+                <div className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-primary/5 transition-colors">
                 <div className="relative shrink-0">
-                  <div className="w-9 h-9 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center text-[10px] font-bold text-primary font-mono">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-bold text-primary font-mono">
                     {initial}
                   </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-sidebar shadow-[0_0_6px_0] shadow-emerald-400/60" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-card" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-foreground truncate">{username}</div>
-                  <div className="text-[9px] text-muted-foreground font-mono truncate">{email}</div>
+                  <div className="text-sm font-semibold text-foreground truncate">{username}</div>
+                  <div className="text-[10px] text-muted-foreground font-mono truncate">{email}</div>
                 </div>
                 <button
                   onClick={() => signOut()}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card/60 transition-colors"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-primary/5 transition-colors"
                   title="Odhlásiť sa"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
+                  <LogOut className="w-4 h-4" />
                 </button>
               </div>
               </>
             ) : (
               <Link
                 href="/prihlasenie"
-                className="flex items-center justify-center h-10 rounded-xl bg-primary hover:bg-primary/90 text-white text-sm font-semibold transition-all shadow-lg shadow-primary/20"
+                className="flex items-center justify-center h-11 rounded-xl bg-primary hover:bg-primary/90 text-white font-mono text-xs uppercase tracking-widest font-semibold transition-all"
               >
                 Prihlásiť sa
               </Link>
@@ -435,7 +418,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ── Content ── */}
       <main className="flex-1 min-w-0 h-full overflow-y-auto overflow-x-hidden relative">
-        <div className="pointer-events-none absolute top-0 right-0 w-[600px] h-[600px] bg-primary/4 rounded-full blur-[160px] -translate-y-1/2 translate-x-1/3" />
         <div className="max-w-6xl mx-auto w-full p-10 relative z-10">
           {children}
         </div>
