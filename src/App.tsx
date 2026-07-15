@@ -8,6 +8,7 @@ import { useAuthContext } from "@/lib/auth-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { PageTransition } from "@/components/page-transition";
 import { Layout } from "@/components/layout";
+import { useTitle } from "@/hooks/useTitle";
 
 // ── Lazy-loaded pages ──
 const AuthPage = lazy(() => import("@/pages/auth"));
@@ -42,6 +43,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function Router() {
   const [location] = useLocation();
+  useTitle();
 
   return (
     <AnimatePresence mode="wait">
