@@ -53,14 +53,7 @@ export default function Ledger() {
         <>
           <div className="border-b border-border/50 pb-8 flex flex-col justify-between items-start gap-6">
         <div>
-          <div className="flex items-center gap-2 text-[11px] font-mono text-primary uppercase tracking-widest mb-3">
-            <History className="w-3.5 h-3.5" />
-            Audit log
-          </div>
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Denník transakcií</h1>
-          <p className="text-muted-foreground text-sm mt-1.5">
-            Reálne záznamy z tabuľky transactions.
-          </p>
         </div>
 
         <div className="flex gap-2 w-full">

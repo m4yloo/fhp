@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useCancelPassRequest, usePassRequests, useRequestPass } from "@/hooks/usePassRequests";
 import { PassesSkeleton } from "@/components/skeletons";
-import { ArrowRight, Check, Clock, CreditCard, Infinity, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, Check, Clock, CreditCard, Infinity, Sparkles } from "lucide-react";
 
 const PLANS = [
   {
@@ -75,14 +75,7 @@ export default function Passes() {
       {isLoading && !requests.length ? <PassesSkeleton /> : (
         <>
           <div className="border-b border-border/50 pb-8">
-            <div className="flex items-center gap-2 text-[11px] font-mono text-primary uppercase tracking-widest mb-3">
-              <Sparkles className="w-3.5 h-3.5" />
-              Členstvo
-            </div>
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Členské pasy</h1>
-            <p className="text-muted-foreground text-sm max-w-lg">
-              Vyber plán. Kliknutie vytvorí reálny záznam v tabuľke pass_requests.
-            </p>
           </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-3xl">
@@ -150,16 +143,7 @@ export default function Passes() {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground font-mono border-t border-border/40 pt-8">
-        <span className="flex items-center gap-1.5">
-          <Zap className="w-3.5 h-3.5 text-primary" />
-          Žiadosti sú uložené v Supabase
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Check className="w-3.5 h-3.5 text-emerald-400" />
-          Schválenie môže riešiť admin flow
-        </span>
-      </div>
+
       </>
       )}
     </div>

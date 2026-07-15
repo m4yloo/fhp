@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Construction, X, AlertTriangle } from "lucide-react";
+import { X, AlertTriangle } from "lucide-react";
 
 export default function FAQ() {
   const [showBanner, setShowBanner] = useState(true);
@@ -28,14 +28,7 @@ export default function FAQ() {
 
       {/* ── Header ── */}
       <div className="border-b border-border/50 pb-8">
-        <div className="flex items-center gap-2 text-[11px] font-mono text-primary uppercase tracking-widest mb-3">
-          <Construction className="w-3.5 h-3.5" />
-          Vo výstavbe
-        </div>
         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Podpora & Časté otázky</h1>
-        <p className="text-muted-foreground text-sm">
-          Táto sekcia je momentálne vo vývoji.
-        </p>
       </div>
 
       {/* ── Skeleton loading cards ── */}
