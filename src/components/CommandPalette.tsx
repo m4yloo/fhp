@@ -34,7 +34,8 @@ const NAV_PAGES = [
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const { data: games = [] } = useGames();
+  const { data } = useGames();
+  const games = data?.pages?.flat() ?? [];
 
   // ⌘K / Ctrl+K to open
   useEffect(() => {

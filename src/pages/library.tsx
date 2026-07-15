@@ -19,6 +19,7 @@ import {
   ArrowDownUp,
   Filter,
 } from "lucide-react";
+import { useEffect as useReactEffect } from "react";
 
 // Friendly Slovak labels for the raw IGDB genre strings.
 export const GENRE_LABELS: Record<string, string> = {
@@ -152,7 +153,8 @@ function GameRail({
 }
 
 export default function Library() {
-  const { data: games = [], isLoading, error } = useGames();
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useGames();
+  const games = data?.pages?.flat() ?? [];
   const [selectedGenre, setSelectedGenre] = useState("Všetky");
   const [selectedDecade, setSelectedDecade] = useState("Všetky");
   const [sortBy, setSortBy] = useState<"rating" | "year" | "name" | "newest">("rating");
@@ -264,7 +266,7 @@ export default function Library() {
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useReactEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
@@ -282,6 +284,13 @@ export default function Library() {
       observer.unobserve(sentinel);
     };
   }, [visibleCount, sorted.length]);
+
+  // Fetch next page from Supabase when nearing the end
+  useReactEffect(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Featured banner: highest-rated game from the current filter.
   const [featured, setFeatured] = useState<any>(null);
@@ -572,7 +581,7 @@ export default function Library() {
 
       {/* ── Infinite Scroll Sentinel ── */}
       <div ref={sentinelRef} className="flex flex-col items-center gap-1.5 pt-4 pb-8 min-h-12 w-full justify-center">
-        {visibleCount < sorted.length ? (
+        {(visibleCount < sorted.length || isFetchingNextPage) ? (
           <div className="flex flex-col items-center gap-2">
             <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             <span className="text-[10px] text-muted-foreground font-mono">
