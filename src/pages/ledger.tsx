@@ -27,6 +27,16 @@ export default function Ledger() {
   const [activeTxInfo, setActiveTxInfo] = useState<any | null>(null);
   const isMobile = useIsMobile();
 
+  const summary = useMemo(() => {
+    let spent = 0;
+    let games = 0;
+    transactions.forEach(t => {
+        if (t.amount) spent += t.amount;
+        if (t.transaction_type === 'game_claim') games++;
+    });
+    return { spent, games };
+  }, [transactions]);
+
   const filteredData = useMemo(() => {
     return transactions.filter((row) => {
       const matchesSearch =
@@ -41,34 +51,46 @@ export default function Ledger() {
       {isLoading && !filteredData.length ? <LedgerSkeleton /> : (
         <>
           <div className="border-b border-border/50 pb-8 flex flex-col justify-between items-start gap-6">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Denník transakcií</h1>
-        </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Denník transakcií</h1>
+            </div>
 
-        <div className="flex gap-2 w-full">
-          <div className="relative flex-1">
-            <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <Input
-              placeholder="Hľadať v popise"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9 bg-card border-border/60 text-xs font-mono focus-visible:ring-primary rounded-xl"
-            />
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 gap-4 w-full">
+                <div className="bg-card border border-border/60 p-4 rounded-xl">
+                    <div className="text-[10px] text-muted-foreground uppercase font-mono tracking-widest mb-1">Celkom minuté</div>
+                    <div className="text-2xl font-bold font-mono">{summary.spent.toFixed(2)} EUR</div>
+                </div>
+                <div className="bg-card border border-border/60 p-4 rounded-xl">
+                    <div className="text-[10px] text-muted-foreground uppercase font-mono tracking-widest mb-1">Získané hry</div>
+                    <div className="text-2xl font-bold font-mono">{summary.games}</div>
+                </div>
+            </div>
+
+            <div className="flex gap-2 w-full">
+              <div className="relative flex-1">
+                <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Input
+                  placeholder="Hľadať v popise"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 h-9 bg-card border-border/60 text-xs font-mono focus-visible:ring-primary rounded-xl"
+                />
+              </div>
+
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="bg-card border border-border/60 text-xs px-3 rounded-xl focus:outline-none focus:border-primary text-muted-foreground cursor-pointer font-mono h-9 shrink-0"
+              >
+                <option value="all">Všetky</option>
+                <option value="game_claim">Získanie</option>
+                <option value="pass_purchase">Nákup</option>
+                <option value="pass_renewal">Obnovenie</option>
+                <option value="pass_upgrade">Upgrade</option>
+              </select>
+            </div>
           </div>
-
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="bg-card border border-border/60 text-xs px-3 rounded-xl focus:outline-none focus:border-primary text-muted-foreground cursor-pointer font-mono h-9 shrink-0"
-          >
-            <option value="all">Všetky</option>
-            <option value="game_claim">Získanie</option>
-            <option value="pass_purchase">Nákup</option>
-            <option value="pass_renewal">Obnovenie</option>
-            <option value="pass_upgrade">Upgrade</option>
-          </select>
-        </div>
-      </div>
 
       <div className="bg-card border border-border/60 rounded-2xl overflow-hidden">
         {!isMobile ? (

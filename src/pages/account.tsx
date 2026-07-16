@@ -32,6 +32,7 @@ export default function Account() {
   const { data: userGames = [], isLoading: gamesLoading } = useUserGames();
   const [revealKeyId, setRevealKeyId] = useState<number | null>(null);
   const [copiedKeyId, setCopiedKeyId] = useState<number | null>(null);
+  const [search, setSearch] = useState("");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editUsername, setEditUsername] = useState("");
   const [editEmail, setEditEmail] = useState("");
@@ -39,6 +40,11 @@ export default function Account() {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileSuccess, setProfileSuccess] = useState(false);
   const renewPass = useRequestPass();
+
+  const filteredGames = userGames.filter(g => 
+    g.game.title.toLowerCase().includes(search.toLowerCase()) || 
+    g.game.platform.toLowerCase().includes(search.toLowerCase())
+  );
 
   const passName = activePass?.pass_type === "unlimited" ? "Neobmedzený pas" : "Limitovaný pas";
   const gamesAllowed = activePass?.games_allowed ?? 0;
@@ -270,18 +276,26 @@ export default function Account() {
             <Gamepad2 className="w-4 h-4 text-primary" />
             <h3 className="font-extrabold text-xl">Hry v trezore</h3>
           </div>
-          <span className="text-[11px] font-mono text-muted-foreground bg-card border border-border/60 px-3 py-1 rounded-lg" data-testid="text-game-count">
-            {gamesLoading ? "..." : userGames.length} hier
-          </span>
+          <div className="flex items-center gap-3">
+             <Input 
+                placeholder="Hľadať hry..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-8 w-40 text-xs font-mono bg-background"
+             />
+             <span className="text-[11px] font-mono text-muted-foreground bg-card border border-border/60 px-3 py-1 rounded-lg" data-testid="text-game-count">
+              {gamesLoading ? "..." : filteredGames.length} hier
+            </span>
+          </div>
         </div>
 
-        {userGames.length === 0 && !gamesLoading ? (
+        {filteredGames.length === 0 && !gamesLoading ? (
           <div className="bg-card border border-dashed border-border/60 rounded-2xl p-8 text-sm text-muted-foreground">
-            Zatiaľ nemáš žiadne uplatnené hry. Keď získaš licenciu, objaví sa tu.
+            {search ? "Nenašli sa žiadne hry podľa tvojho hľadania." : "Zatiaľ nemáš žiadne uplatnené hry. Keď získaš licenciu, objaví sa tu."}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {userGames.map((item) => {
+            {filteredGames.map((item) => {
               const isRevealed = revealKeyId === item.game_id;
               const isCopied = copiedKeyId === item.game_id;
 
