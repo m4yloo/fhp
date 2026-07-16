@@ -525,137 +525,122 @@ export default function Library() {
         </div>
       )}
 
-      {/* ── Filters bar ── */}
-      <div className="flex flex-col gap-3">
-        {/* Row 1: Title + count + filter controls */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex items-center gap-2 shrink-0">
-            <h2 className="text-base font-bold text-foreground">Katalóg</h2>
-            <span className="text-[11px] text-muted-foreground font-mono">{filtered.length} hier</span>
-          </div>
-          <div className="h-px flex-1 bg-border/40 hidden sm:block" />
-
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            {/* Sort dropdown */}
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-              <SelectTrigger className="w-[120px] h-8 text-xs font-mono bg-card/80 border-border/50 rounded-lg">
-                <ArrowDownUp className="w-3 h-3 mr-1.5 text-muted-foreground" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="rating">Hodnotenie</SelectItem>
-                <SelectItem value="newest">Najnovšie</SelectItem>
-                <SelectItem value="shuffle">Náhodne</SelectItem>
-                <SelectItem value="year">Rok vzostupne</SelectItem>
-                <SelectItem value="name">Názov A–Z</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Decade filter */}
-            <Select value={selectedDecade} onValueChange={setSelectedDecade}>
-              <SelectTrigger className="w-[100px] h-8 text-xs font-mono bg-card/80 border-border/50 rounded-lg">
-                <Filter className="w-3 h-3 mr-1.5 text-muted-foreground" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Všetky">Všetky</SelectItem>
-                {ALL_DECADES.map((d) => (
-                  <SelectItem key={d} value={String(d)}>
-                    {DECADE_LABELS[d] || `${d}s`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Row 2: Search (full width on mobile) */}
-        <div className="relative w-full" ref={searchBoxRef}>
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none z-10" />
-          <Input
-            placeholder="Hľadať…"
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-            onFocus={() => setSearchOpen(true)}
-            data-testid="input-search"
-            className="pl-9 pr-8 bg-card border-border/60 h-8 text-xs font-mono rounded-lg w-full sm:w-64"
-          />
-          {search && (
-            <button
-              onClick={() => {
-                setSearch("");
-                setBroadSearchTerm("");
-                setSearchOpen(false);
-              }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          )}
-
-          {/* Dropdown results */}
-          {searchOpen && search.trim() && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl overflow-hidden z-50 max-h-72 overflow-y-auto">
-              {searchMatches.length === 0 ? (
-                <div className="px-3 py-4 text-center">
-                  <Search className="w-4 h-4 text-muted-foreground/40 mx-auto mb-1.5" />
-                  <p className="text-[11px] font-mono text-muted-foreground">Žiadne výsledky.</p>
-                  <p className="text-[10px] font-mono text-muted-foreground/60 mt-0.5">Skúste iný výraz.</p>
-                </div>
-              ) : (
-                searchMatches.map((g) => (
-                  <button
-                    key={g.id}
-                    onClick={() => pickGame(g.id)}
-                    data-testid={`search-result-${g.id}`}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-accent transition-colors"
-                  >
-                    <img
-                      src={g.image}
-                      alt=""
-                      className="w-8 h-8 rounded object-cover shrink-0"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-semibold text-foreground truncate">{safeStr(g.title)}</div>
-                      <div className="text-[10px] font-mono text-muted-foreground truncate">
-                        {GENRE_LABELS[safeStr(g.genre)] || g.genre} · {safeNum(g.year)}
-                      </div>
-                    </div>
-                    <span className={`text-[10px] font-mono ${getRatingColor(g.rating)} shrink-0`}>
-                      {safeRating(g.rating)}
-                    </span>
-                  </button>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Genre pills - horizontally scrollable with fade */}
-        <div className="relative" ref={genreScrollRef}>
-          <div
-            ref={genreContainerRef}
-            onScroll={updateGenreFade}
-            className="flex items-center gap-1.5 overflow-x-auto pb-2 -mb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {genres.map((g) => (
+      {/* ── Enhanced Control Panel ── */}
+      <div className="bg-card/50 border border-border/50 rounded-2xl p-4 sm:p-5 space-y-4">
+        {/* Row 1: Search + Count */}
+        <div className="flex flex-col sm:flex-row gap-3 items-center">
+          <div className="relative w-full" ref={searchBoxRef}>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none z-10" />
+            <Input
+              placeholder="Hľadať v katalógu…"
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              onFocus={() => setSearchOpen(true)}
+              data-testid="input-search"
+              className="pl-9 pr-8 bg-background border-border/60 h-10 text-sm font-mono rounded-xl w-full"
+            />
+            {search && (
               <button
-                key={g}
-                onClick={() => setSelectedGenre(g)}
-                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all shrink-0 ${
-                  selectedGenre === g
-                    ? "bg-primary text-white"
-                    : "bg-card border border-border/50 text-foreground/70 hover:text-foreground hover:border-border"
-                }`}
+                onClick={() => {
+                  setSearch("");
+                  setBroadSearchTerm("");
+                  setSearchOpen(false);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10"
               >
-                {g}
+                <X className="w-3.5 h-3.5" />
               </button>
-            ))}
+            )}
+
+            {/* Dropdown results */}
+            {searchOpen && search.trim() && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-xl shadow-2xl overflow-hidden z-50 max-h-72 overflow-y-auto">
+                {searchMatches.length === 0 ? (
+                  <div className="px-3 py-4 text-center">
+                    <Search className="w-4 h-4 text-muted-foreground/40 mx-auto mb-1.5" />
+                    <p className="text-[11px] font-mono text-muted-foreground">Žiadne výsledky.</p>
+                  </div>
+                ) : (
+                  searchMatches.map((g) => (
+                    <button
+                      key={g.id}
+                      onClick={() => pickGame(g.id)}
+                      data-testid={`search-result-${g.id}`}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-accent/50 transition-colors"
+                    >
+                      <img src={g.image} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-semibold text-foreground truncate">{safeStr(g.title)}</div>
+                        <div className="text-[10px] font-mono text-muted-foreground truncate">{GENRE_LABELS[safeStr(g.genre)] || g.genre} · {safeNum(g.year)}</div>
+                      </div>
+                      <span className={`text-[10px] font-mono ${getRatingColor(g.rating)} shrink-0`}>{safeRating(g.rating)}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
           </div>
-          {genreCanScrollRight && (
-            <div className="absolute top-0 right-0 bottom-2 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none z-10" />
-          )}
+          <div className="text-xs font-mono text-muted-foreground whitespace-nowrap px-2">
+            {filtered.length} hier
+          </div>
+        </div>
+
+        {/* Row 2: Sort + Decade + Genres */}
+        <div className="flex flex-col sm:flex-row gap-3 items-center pt-2 border-t border-border/40">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+             <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                <SelectTrigger className="flex-1 sm:w-[130px] h-9 text-xs font-mono bg-background border-border/50 rounded-lg">
+                  <ArrowDownUp className="w-3 h-3 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Sort" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="rating">Najlepšie</SelectItem>
+                  <SelectItem value="newest">Najnovšie</SelectItem>
+                  <SelectItem value="shuffle">Náhodne</SelectItem>
+                  <SelectItem value="year">Rok vzostupne</SelectItem>
+                  <SelectItem value="name">Názov A–Z</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedDecade} onValueChange={setSelectedDecade}>
+                <SelectTrigger className="flex-1 sm:w-[110px] h-9 text-xs font-mono bg-background border-border/50 rounded-lg">
+                  <Filter className="w-3 h-3 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Obdobie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Všetky">Všetky</SelectItem>
+                  {ALL_DECADES.map((d) => (
+                    <SelectItem key={d} value={String(d)}>{DECADE_LABELS[d] || `${d}s`}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+          </div>
+
+          <div className="h-px sm:h-6 w-full sm:w-px bg-border/50" />
+
+          {/* Genre pills */}
+          <div className="relative w-full flex-1 min-w-0" ref={genreScrollRef}>
+            <div
+              ref={genreContainerRef}
+              onScroll={updateGenreFade}
+              className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {genres.map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setSelectedGenre(g)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
+                    selectedGenre === g
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-background border border-border/50 text-foreground/70 hover:bg-card hover:border-border"
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
