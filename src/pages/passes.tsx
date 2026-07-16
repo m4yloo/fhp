@@ -16,7 +16,7 @@ const PLANS = [
     badge: null,
     cta: "Požiadať o limitovaný pas",
     testid: "button-select-metered",
-    features: ["12 hier celkovo", "Bez časového limitu", "Štandardný katalóg", "Podpora do 24h"],
+    features: ["12 hier celkovo", "Bez časového limitu"],
   },
   {
     id: "unlimited" as const,
@@ -29,7 +29,7 @@ const PLANS = [
     badge: "Odporúčané",
     cta: "Požiadať o neobmedzený pas",
     testid: "button-select-unlimited",
-    features: ["100 hier celkovo", "Platnosť 4 mesiace", "Prioritná podpora"],
+    features: ["100 hier celkovo", "Platnosť 4 mesiace"],
   },
 ];
 
