@@ -16,7 +16,6 @@ import {
   Star,
   ArrowDownUp,
   Filter,
-  ArrowUp,
 } from "lucide-react";
 import { useEffect as useReactEffect } from "react";
 import { GameRail, GENRE_LABELS, safeStr, safeNum, safeRating, getRatingColor, safeTags } from "@/components/library/GameRail";
@@ -168,17 +167,7 @@ export default function Library() {
   // Pagination: render in batches to keep the DOM light. Reset on filter/sort change.
   const VISIBLE_STEP = 30;
   const [visibleCount, setVisibleCount] = useState(VISIBLE_STEP);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   useEffect(() => setVisibleCount(VISIBLE_STEP), [selectedGenre, selectedDecade, sortBy]);
-  
-  useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
-
   const visible = sorted.slice(0, visibleCount);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -541,17 +530,6 @@ export default function Library() {
             )
           )}
         </div>
-
-        {/* ── Back to Top Button ── */}
-        {showScrollTop && (
-          <button
-            onClick={scrollToTop}
-            className="fixed bottom-6 right-6 z-50 p-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-110 transition-all duration-200"
-            aria-label="Back to top"
-          >
-            <ArrowUp className="w-5 h-5" />
-          </button>
-        )}
       </div>
     );
   }
