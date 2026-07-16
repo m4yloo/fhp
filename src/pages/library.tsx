@@ -349,8 +349,8 @@ export default function Library() {
       {/* ── Enhanced Control Panel ── */}
       <div className="bg-card/50 border border-border/50 rounded-2xl p-4 sm:p-5 space-y-4">
         {/* Row 1: Search + Count */}
-        <div className="flex flex-col sm:flex-row gap-3 items-center">
-          <div className="relative w-full" ref={searchBoxRef}>
+        <div className="flex flex-col gap-3" ref={searchBoxRef}>
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none z-10" />
             <Input
               placeholder="Hľadať v katalógu…"
@@ -402,8 +402,8 @@ export default function Library() {
               </div>
             )}
           </div>
-          <div className="text-xs font-mono text-muted-foreground whitespace-nowrap px-2">
-            {filtered.length} hier
+          <div className="text-[11px] font-mono text-muted-foreground">
+            Zobrazených {filtered.length} hier
           </div>
         </div>
 
