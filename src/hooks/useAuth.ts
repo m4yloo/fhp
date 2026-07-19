@@ -1,6 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import type { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import {
+  isSupabaseConfigured,
+  supabase,
+  supabaseConfigurationError,
+} from "@/lib/supabase";
 import {
   DEV_BYPASS_KEY,
   DEV_PROFILE,
@@ -57,6 +61,10 @@ export function useAuth() {
 
   useEffect(() => {
     if (devBypassRef.current) return;
+    if (!isSupabaseConfigured) {
+      setState({ user: null, session: null, profile: null, loading: false });
+      return;
+    }
 
     let mounted = true;
 
@@ -130,43 +138,66 @@ export function useAuth() {
     setState({ user: null, session: null, profile: null, loading: false });
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string, username: string) => {
-    setState((current) => ({ ...current, loading: true }));
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { username },
-      },
-    });
-    setState((current) => ({ ...current, loading: false }));
-    if (error) throw error;
+  const assertConfigured = useCallback(() => {
+    if (!isSupabaseConfigured) {
+      throw new Error(supabaseConfigurationError ?? "Supabase nie je nakonfigurovaný.");
+    }
   }, []);
+
+  const signUp = useCallback(async (email: string, password: string, username: string) => {
+    assertConfigured();
+    setState((current) => ({ ...current, loading: true }));
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { username },
+          emailRedirectTo:
+            import.meta.env.VITE_DEV_SUPABASE_REDIRECT_URL
+            || `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+    } finally {
+      setState((current) => ({ ...current, loading: false }));
+    }
+  }, [assertConfigured]);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    assertConfigured();
     setState((current) => ({ ...current, loading: true }));
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setState((current) => ({ ...current, loading: false }));
-    if (error) throw error;
-  }, []);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    } finally {
+      setState((current) => ({ ...current, loading: false }));
+    }
+  }, [assertConfigured]);
 
   const signInWithOAuth = useCallback(async (provider: "discord" | "google") => {
-    const origin = window.location.origin;
+    assertConfigured();
+    const redirectTo =
+      import.meta.env.VITE_DEV_SUPABASE_REDIRECT_URL
+      || `${window.location.origin}/auth/callback`;
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: {
-        redirectTo: `${origin}/auth/callback`,
-        skipBrowserRedirect: true,
-      },
+      options: { redirectTo, skipBrowserRedirect: true },
     });
     if (error) throw error;
+    if (!data.url) throw new Error("Poskytovateľ prihlásenia nevrátil platnú adresu.");
 
     const width = 600;
     const height = 700;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
-    window.open(data.url, "oauth popup", `width=${width},height=${height},left=${left},top=${top}`);
-  }, []);
+    const popup = window.open(
+      data.url,
+      "fhp-oauth",
+      `popup=yes,width=${width},height=${height},left=${left},top=${top}`,
+    );
+    if (!popup) window.location.assign(data.url);
+  }, [assertConfigured]);
 
   const updateProfile = useCallback(async (updates: { username?: string; email?: string }) => {
     const currentUser = state.user;
